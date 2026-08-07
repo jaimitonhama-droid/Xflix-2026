@@ -189,19 +189,13 @@ export function PreviewPlayer({
         </div>
       )}
 
-      {/* Overlay Seguro indicando que é apenas a prévia */}
-      {!(isUnlocked || (expiresAt && !isExpired)) && (
-        <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 pointer-events-none z-10 transition-opacity duration-300 opacity-100 group-hover:opacity-100">
-          <ShieldCheck className="w-4 h-4 text-green-500" />
-          <span className="text-white text-xs font-bold uppercase tracking-wider">Preview Gratuito</span>
-        </div>
-      )}
+
 
       {/* Tela de Limite Atingido / Expirado */}
       {limitReached && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-500">
-          <div className="w-16 h-16 bg-red-600/20 border border-red-500/50 rounded-2xl flex items-center justify-center mb-4">
-            <Lock className="w-8 h-8 text-red-500" />
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/90 backdrop-blur-md animate-in fade-in duration-500">
+          <div className="w-16 h-16 bg-zinc-900 border border-zinc-800 rounded-full flex items-center justify-center mb-6 shadow-2xl">
+            <Lock className="w-7 h-7 text-zinc-300" />
           </div>
           {isExpired && (
             <>
@@ -215,7 +209,7 @@ export function PreviewPlayer({
           )}
           <button 
             onClick={() => { if (onLimitReached) onLimitReached(); }}
-            className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-[0_0_20px_rgba(220,38,38,0.4)] hover:shadow-[0_0_30px_rgba(220,38,38,0.6)]"
+            className="bg-red-600 hover:bg-red-500 text-white font-bold py-3.5 px-8 rounded-xl transition-all shadow-lg hover:shadow-red-600/20 active:scale-95"
           >
             {isExpired ? "Renovar Aluguel" : "Desbloquear Vídeo Completo"}
           </button>

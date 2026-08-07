@@ -51,20 +51,7 @@ export function VideoCard({
             </div>
           </div>
 
-          {/* Badges do Canto Superior */}
-          <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 pointer-events-none z-10">
-            {isLocked ? (
-              <span className="bg-red-600/90 text-white text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider flex items-center gap-1 shadow-md border border-red-500/30">
-                <Lock className="w-3 h-3" />
-                VIP • {rentalPrice > 0 ? `${rentalPrice} MT` : '20 MT'}
-              </span>
-            ) : (
-              <span className="bg-emerald-500 text-white text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider shadow-md flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" />
-                GRÁTIS
-              </span>
-            )}
-          </div>
+
           
           {/* Visualizações e Duração */}
           <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-none z-10 text-[10px] text-zinc-300 font-semibold">
@@ -90,10 +77,6 @@ export function VideoCard({
             {title}
           </h3>
 
-          <div className="pt-2 border-t border-zinc-800/60 flex items-center justify-between text-xs">
-            <span className="text-zinc-500 font-medium">Aluguer 24h:</span>
-            <span className="text-emerald-400 font-black">{rentalPrice > 0 ? `${rentalPrice} MT` : '20 MT'}</span>
-          </div>
         </div>
       </Link>
     </div>

@@ -33,7 +33,7 @@ export function VideoActions({ videoId, title }: VideoActionsProps) {
     <div className="flex flex-col gap-4">
       <button 
         onClick={handleDownload}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-lg py-5 px-6 rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:shadow-[0_0_30px_rgba(37,99,235,0.6)] hover:-translate-y-1"
+        className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-black text-lg py-4 px-6 rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 border border-zinc-700/50 hover:border-zinc-600 shadow-lg hover:shadow-xl hover:-translate-y-1"
       >
         <Download className="w-6 h-6" />
         <span>Baixar</span>
