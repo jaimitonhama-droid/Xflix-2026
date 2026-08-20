@@ -54,8 +54,8 @@ export function VideoCard({
 
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 z-20" />
           
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
-            <div className="bg-red-600/90 hover:bg-red-600 p-3.5 rounded-full backdrop-blur-md transform group-hover:scale-110 transition-transform duration-300 shadow-[0_0_25px_rgba(220,38,38,0.5)]">
+          <div className="absolute inset-0 flex items-center justify-center transition-opacity duration-300 z-30 pointer-events-none">
+            <div className="bg-red-600/80 hover:bg-red-600 p-3.5 rounded-full backdrop-blur-sm transform group-hover:scale-110 transition-all duration-300 shadow-[0_0_20px_rgba(220,38,38,0.4)]">
               <Play className="w-6 h-6 text-white fill-white ml-0.5" />
             </div>
           </div>

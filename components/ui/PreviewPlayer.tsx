@@ -253,6 +253,15 @@ export function PreviewPlayer({
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
+            
+            {/* Play/Pause Button na barra */}
+            <button 
+              onClick={togglePlay} 
+              className="text-white hover:text-red-500 transition-colors focus:outline-none"
+            >
+              {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current" />}
+            </button>
+
             <div className="flex items-center gap-2 group/volume">
               <button onClick={toggleMute} className="text-white hover:text-red-500 transition-colors focus:outline-none">
                 {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
