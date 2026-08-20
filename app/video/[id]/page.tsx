@@ -121,7 +121,6 @@ export default function VideoDetailsPage({ params }: { params: Promise<{ id: str
             </div>
 
             <div className="pt-2 md:pt-4">
-              <h3 className="text-white font-bold mb-2">Sinopse</h3>
               <p className="text-zinc-400 leading-relaxed text-sm md:text-base">
                 {video.description || "Nenhuma legenda fornecida para este vídeo."}
               </p>
