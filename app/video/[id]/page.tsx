@@ -101,24 +101,9 @@ export default function VideoDetailsPage({ params }: { params: Promise<{ id: str
               </div>
             </div>
 
-            <h1 className="text-3xl md:text-5xl font-black text-white leading-tight mb-4 tracking-tighter">
+            <h1 className="text-xl md:text-3xl font-black text-white leading-tight mb-4 tracking-tighter">
               {video.title}
             </h1>
-            
-            <div className="flex flex-wrap items-center gap-8 text-base text-zinc-300 mb-8 font-bold">
-              <div className="flex items-center gap-2.5 hover:text-white transition-colors cursor-default" title="Visualizações">
-                <Eye className="w-5 h-5 text-zinc-500" />
-                0
-              </div>
-              <div className="flex items-center gap-2.5 hover:text-white transition-colors cursor-default" title="Curtidas">
-                <ThumbsUp className="w-5 h-5 text-zinc-500" />
-                0
-              </div>
-              <div className="flex items-center gap-2.5 hover:text-white transition-colors cursor-pointer" title="Comentários">
-                <MessageSquare className="w-5 h-5 text-zinc-500" />
-                0
-              </div>
-            </div>
 
             <div className="pt-2 md:pt-4">
               <p className="text-zinc-400 leading-relaxed text-sm md:text-base">

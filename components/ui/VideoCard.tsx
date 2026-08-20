@@ -71,18 +71,7 @@ export function VideoCard({
               {description}
             </p>
           )}
-          
-          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-            <span className="flex items-center gap-1 text-[10px] md:text-xs font-semibold text-zinc-400 bg-zinc-900/80 px-2.5 py-0.5 rounded-full border border-white/5">
-              <Eye className="w-3 h-3 md:w-3.5 md:h-3.5" /> {views}
-            </span>
-            <span className="flex items-center gap-1 text-[10px] md:text-xs font-semibold text-zinc-400 bg-zinc-900/80 px-2.5 py-0.5 rounded-full border border-white/5">
-              <ThumbsUp className="w-3 h-3 md:w-3.5 md:h-3.5" /> {likes}
-            </span>
-            <span className="flex items-center gap-1 text-[10px] md:text-xs font-semibold text-zinc-400 bg-zinc-900/80 px-2.5 py-0.5 rounded-full border border-white/5">
-              <MessageSquare className="w-3 h-3 md:w-3.5 md:h-3.5" /> {comments}
-            </span>
-          </div>
+
         </div>
       </Link>
     </div>
