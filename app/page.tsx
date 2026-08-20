@@ -1,97 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Play, Sparkles, Lock, Flame, ShieldCheck, Tag, RefreshCw } from "lucide-react";
 import { VideoCard } from "@/components/ui/VideoCard";
-import { PaywallModal } from "@/components/ui/PaywallModal";
 
-const MOCK_VIDEOS = [
-  { 
-    id: 1, 
-    title: "Cena Exclusiva VIP #01", 
-    category: "Exclusivos VIP", 
-    duration: "15:45", 
-    price: 50, 
-    rentalPrice: 20, 
-    views: "18.5k",
-    imageUrl: "https://images.unsplash.com/photo-1542051812871-757500d5a228?q=80&w=800&auto=format&fit=crop" 
-  },
-  { 
-    id: 2, 
-    title: "Coleção Premium HD Vol. 2", 
-    category: "Cenas Completas HD", 
-    duration: "22:10", 
-    price: 50, 
-    rentalPrice: 20, 
-    views: "24.1k",
-    imageUrl: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=800&auto=format&fit=crop" 
-  },
-  { 
-    id: 3, 
-    title: "Sessão Privada Sem Cortes", 
-    category: "Exclusivos VIP", 
-    duration: "18:30", 
-    price: 50, 
-    rentalPrice: 20, 
-    views: "31.9k",
-    imageUrl: "https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=800&auto=format&fit=crop" 
-  },
-  { 
-    id: 4, 
-    title: "Especial Lançamento +18", 
-    category: "Lançamentos", 
-    duration: "12:00", 
-    price: 50, 
-    rentalPrice: 20, 
-    views: "14.2k",
-    imageUrl: "https://images.unsplash.com/photo-1533167649158-6d508895b680?q=80&w=800&auto=format&fit=crop" 
-  },
-  { 
-    id: 5, 
-    title: "Destaque Virais Vol. 4", 
-    category: "Populares & Virais", 
-    duration: "08:15", 
-    price: 50, 
-    rentalPrice: 20, 
-    views: "42.0k",
-    imageUrl: "https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=800&auto=format&fit=crop" 
-  },
-  { 
-    id: 6, 
-    title: "Bastidores Exclusivos VIP", 
-    category: "Exclusivos VIP", 
-    duration: "16:40", 
-    price: 50, 
-    rentalPrice: 20, 
-    views: "19.8k",
-    imageUrl: "https://images.unsplash.com/photo-1607262807149-adfa084dc090?q=80&w=800&auto=format&fit=crop" 
-  },
-  { 
-    id: 7, 
-    title: "Ensaio Especial HD Vol. 5", 
-    category: "Cenas Completas HD", 
-    duration: "25:00", 
-    price: 50, 
-    rentalPrice: 20, 
-    views: "11.3k",
-    imageUrl: "https://images.unsplash.com/photo-1512418490979-92798cec1380?q=80&w=800&auto=format&fit=crop" 
-  },
-  { 
-    id: 8, 
-    title: "Coleção VIP de Fim de Semana", 
-    category: "Lançamentos", 
-    duration: "30:15", 
-    price: 50, 
-    rentalPrice: 20, 
-    views: "27.6k",
-    imageUrl: "https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=800&auto=format&fit=crop" 
-  },
-];
+import { createClient } from "@/services/supabase/client";
 
 export default function HomePage() {
-  const [selectedLockedVideo, setSelectedLockedVideo] = useState<string | null>(null);
-  const [hasPaid, setHasPaid] = useState<boolean>(false);
   const [activeCategory, setActiveCategory] = useState<string>("Todos");
   const [currentPage, setCurrentPage] = useState<number>(1);
 
@@ -103,9 +19,34 @@ export default function HomePage() {
     "Populares & Virais",
   ];
 
+  const [videos, setVideos] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const fetchRealVideos = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("videos")
+          .select("*, category:categories(name)")
+          .eq("status", "published")
+          .order("created_at", { ascending: false });
+        
+        if (data) {
+          setVideos(data);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchRealVideos();
+  }, []);
+
   const filteredVideos = activeCategory === "Todos" 
-    ? MOCK_VIDEOS 
-    : MOCK_VIDEOS.filter(v => v.category === activeCategory);
+    ? videos 
+    : videos.filter(v => v.category?.name === activeCategory || v.category === activeCategory);
 
   return (
     <div className="w-full flex flex-col pb-16 pt-2 space-y-10 select-none">
@@ -125,7 +66,7 @@ export default function HomePage() {
           </div>
           
           {/* Pílulas de Categorias (Estilo Pílula Arredondada Premium) */}
-          <div className="flex items-center gap-2.5 overflow-x-auto pb-2 md:pb-0 scroll-row">
+          <div className="flex items-center gap-3 overflow-x-auto pb-4 md:pb-0 scroll-row -mx-6 px-6 md:mx-0 md:px-0">
             {categories.map((cat) => (
               <button
                 key={cat}
@@ -133,10 +74,10 @@ export default function HomePage() {
                   setActiveCategory(cat);
                   setCurrentPage(1); // Reset page on category change
                 }}
-                className={`px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-300 ${
+                className={`px-6 py-3 md:py-2.5 rounded-full text-[13px] md:text-xs font-bold whitespace-nowrap transition-all duration-300 border flex-shrink-0 ${
                   activeCategory === cat
-                    ? "bg-white text-zinc-950 shadow-md"
-                    : "bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+                    ? "bg-white border-white text-zinc-950 shadow-[0_4px_15px_rgba(255,255,255,0.15)] scale-105"
+                    : "bg-[#111113] border-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-800"
                 }`}
               >
                 {cat === "Todos" && "🔥 "}
@@ -152,25 +93,35 @@ export default function HomePage() {
 
         {/* Grelha Principal de Cards de Vídeos */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredVideos.map((video) => {
-            const isLocked = !hasPaid;
-
-            return (
-              <VideoCard 
-                key={`video-${video.id}`}
-                id={video.id}
-                title={video.title}
-                category={video.category}
-                duration={video.duration}
-                price={video.price}
-                rentalPrice={video.rentalPrice}
-                imageUrl={video.imageUrl}
-                views={video.views}
-                isLocked={isLocked}
-                onLockedClick={() => setSelectedLockedVideo(video.id.toString())}
-              />
-            );
-          })}
+          {isLoading ? (
+            Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="flex flex-col gap-3 w-full animate-pulse">
+                <div className="w-full aspect-video bg-zinc-900 rounded-xl" />
+                <div className="flex flex-col gap-2 px-1">
+                  <div className="h-4 bg-zinc-800 rounded-md w-3/4" />
+                  <div className="h-3 bg-zinc-900 rounded-md w-1/2" />
+                </div>
+              </div>
+            ))
+          ) : (
+            filteredVideos.map((video) => {
+              return (
+                <VideoCard 
+                  key={`video-${video.id}`}
+                  id={video.id}
+                  title={video.title}
+                  description={video.description}
+                  category={video.category?.name || "Sem Categoria"}
+                  duration={`${Math.floor((video.duration || 15) / 60)}:${((video.duration || 15) % 60).toString().padStart(2, '0')}`}
+                  price={video.price}
+                  rentalPrice={video.rental_price}
+                  imageUrl={video.thumbnail_url}
+                  videoUrl={video.video_url}
+                  views="0"
+                />
+              );
+            })
+          )}
         </div>
 
         {/* Paginação */}
@@ -222,14 +173,6 @@ export default function HomePage() {
         </div>
 
       </div>
-      
-      {/* Modal de Paywall M-Pesa / e-Mola */}
-      <PaywallModal 
-        isOpen={!!selectedLockedVideo}
-        onClose={() => setSelectedLockedVideo(null)}
-        videoId={selectedLockedVideo || ""}
-        onSuccess={() => setHasPaid(true)}
-      />
     </div>
   );
 }

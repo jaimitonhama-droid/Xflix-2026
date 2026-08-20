@@ -79,18 +79,15 @@ export default function AdminVideosPage() {
 
   // Ficheiros Selecionados
   const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
-  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
-
+  
   const videoInputRef = useRef<HTMLInputElement>(null);
-  const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
   const fetchVideos = async () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from("videos")
-        .select("*")
+        .select("*, category:categories(name)")
         .order("created_at", { ascending: false });
 
       if (error || !data || data.length === 0) {
@@ -102,7 +99,7 @@ export default function AdminVideosPage() {
           description: v.description || "",
           price: v.price || 0,
           rental_price: v.rental_price || 0,
-          category: v.category_id || "Exclusivos VIP",
+          category: v.category?.name || "Sem Categoria",
           preview_seconds: v.duration || 15,
           thumbnail_url: v.thumbnail_url || "https://images.unsplash.com/photo-1542051812871-757500d5a228?q=80&w=800&auto=format&fit=crop",
           video_url: v.video_url || "",
@@ -121,15 +118,6 @@ export default function AdminVideosPage() {
     fetchVideos();
   }, []);
 
-  // Selecionar Capa (Thumbnail)
-  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setThumbnailFile(file);
-      setThumbnailPreview(URL.createObjectURL(file));
-    }
-  };
-
   // Selecionar Vídeo
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -144,56 +132,74 @@ export default function AdminVideosPage() {
       alert("Por favor, preencha o título do vídeo.");
       return;
     }
+    if (!videoFile) {
+      alert("É obrigatório selecionar o ficheiro de vídeo para publicar.");
+      return;
+    }
 
     setIsUploading(true);
-    setUploadProgress(10);
+    setUploadProgress(10); // Inicia progresso
 
-    // Simulação de progresso de upload
-    const interval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 90) {
-          clearInterval(interval);
-          return 95;
-        }
-        return prev + 20;
-      });
-    }, 400);
+    try {
+      // 1. Upload do Vídeo Principal
+      const videoExt = videoFile.name.split('.').pop();
+      const videoFileName = `${Date.now()}-video.${videoExt}`;
+      const { error: videoError } = await supabase.storage
+        .from('videos')
+        .upload(videoFileName, videoFile, { 
+          cacheControl: '3600',
+          contentType: videoFile.type
+        });
+      
+      if (videoError) throw new Error("Erro no upload do vídeo: " + videoError.message);
 
-    setTimeout(async () => {
-      clearInterval(interval);
-      setUploadProgress(100);
+      const { data: { publicUrl: videoUrl } } = supabase.storage
+        .from('videos')
+        .getPublicUrl(videoFileName);
+      
+      setUploadProgress(85);
 
-      const newVideo: VideoItem = {
-        id: `v-${Date.now()}`,
-        title,
-        description,
-        price: parseFloat(price) || 0,
-        rental_price: parseFloat(rentalPrice) || 0,
-        category,
-        preview_seconds: parseInt(previewSeconds) || 15,
-        thumbnail_url: thumbnailPreview || "https://images.unsplash.com/photo-1542051812871-757500d5a228?q=80&w=800&auto=format&fit=crop",
-        video_url: "https://www.w3schools.com/html/mov_bbb.mp4",
-        created_at: "Hoje",
-      };
+      // 3. Buscar ID da categoria selecionada
+      const { data: catData } = await supabase
+        .from("categories")
+        .select("id")
+        .ilike("name", `%${category.split(' ')[0]}%`)
+        .limit(1)
+        .single();
 
-      try {
-        await supabase.from("videos").insert({
+      // 4. Gravar na Base de Dados (Tabela Videos)
+      setUploadProgress(95);
+      const { data: insertedVideo, error: dbError } = await supabase
+        .from("videos")
+        .insert({
           title,
           description,
           price: parseFloat(price) || 0,
           rental_price: parseFloat(rentalPrice) || 0,
           status: "published",
-        });
-      } catch (err) {
-        console.error(err);
-      }
+          thumbnail_url: null,
+          video_url: videoUrl,
+          category_id: catData?.id || null
+        })
+        .select()
+        .single();
 
-      setVideos((prev) => [newVideo, ...prev]);
-      setIsUploading(false);
+      if (dbError) throw new Error("Erro ao gravar dados na BD: " + dbError.message);
+
+      setUploadProgress(100);
+      alert("Vídeo publicado com sucesso na plataforma!");
+      
+      // Atualizar a lista localmente para refletir o novo vídeo
+      fetchVideos();
       setIsModalOpen(false);
       resetForm();
-      alert("Vídeo publicado com sucesso na plataforma!");
-    }, 2200);
+
+    } catch (err: any) {
+      console.error(err);
+      alert("Ocorreu um erro: " + err.message);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const resetForm = () => {
@@ -201,16 +207,19 @@ export default function AdminVideosPage() {
     setDescription("");
     setPrice("500");
     setRentalPrice("150");
-    setPreviewSeconds("15");
     setVideoFile(null);
-    setThumbnailFile(null);
-    setThumbnailPreview(null);
     setUploadProgress(0);
   };
 
-  const handleDeleteVideo = (id: string) => {
-    if (confirm("Tem certeza que deseja eliminar este vídeo do catálogo?")) {
-      setVideos((prev) => prev.filter((v) => v.id !== id));
+  const handleDeleteVideo = async (id: string) => {
+    if (confirm("Tem certeza que deseja eliminar este vídeo do catálogo permanentemente?")) {
+      try {
+        const { error } = await supabase.from('videos').delete().eq('id', id);
+        if (error) throw error;
+        setVideos((prev) => prev.filter((v) => v.id !== id));
+      } catch (err: any) {
+        alert("Erro ao eliminar o vídeo: " + err.message);
+      }
     }
   };
 
@@ -221,16 +230,17 @@ export default function AdminVideosPage() {
   });
 
   return (
-    <div className="w-full space-y-8 animate-fade-in pb-12 select-none">
-      
-      {/* Cabeçalho */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-white tracking-tight">Gestão do Catálogo de Vídeos +18</h1>
-          <p className="text-sm text-zinc-400">Adicione novos vídeos, defina capas, preços de aluguer/compra e a prévia gratuita.</p>
-        </div>
+    <>
+      <div className="w-full space-y-8 animate-fade-in pb-12 select-none">
+        
+        {/* Cabeçalho */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-black text-white tracking-tight">Gestão do Catálogo de Vídeos +18</h1>
+            <p className="text-sm text-zinc-400">Adicione novos vídeos, defina capas, preços de aluguer/compra e a prévia gratuita.</p>
+          </div>
 
-        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
           <button 
             onClick={fetchVideos}
             className="flex items-center gap-2 bg-[#121215] border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all shadow-sm"
@@ -285,20 +295,23 @@ export default function AdminVideosPage() {
         {filteredVideos.map((v) => (
           <div key={v.id} className="bg-[#121215]/90 border border-zinc-800/80 hover:border-zinc-700/80 rounded-2xl overflow-hidden shadow-xl backdrop-blur-xl group transition-all duration-300 flex flex-col justify-between">
             <div>
-              {/* Thumbnail com Overlay */}
+              {/* Thumbnail / Player fallback com Overlay */}
               <div className="relative aspect-video w-full bg-zinc-900 overflow-hidden">
-                <img 
-                  src={v.thumbnail_url} 
-                  alt={v.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80" />
+                {v.thumbnail_url ? (
+                  <img 
+                    src={v.thumbnail_url} 
+                    alt={v.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                  />
+                ) : (
+                  <video 
+                    src={v.video_url}
+                    preload="metadata"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80 pointer-events-none" />
                 
-                {/* Badge da Prévia Gratuita */}
-                <div className="absolute top-3 left-3 bg-red-600/90 text-white border border-red-500/30 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-md">
-                  Prévia: {v.preview_seconds}s
-                </div>
-
                 <div className="absolute bottom-3 left-3 right-3 flex justify-between items-end">
                   <span className="bg-zinc-950/80 backdrop-blur-md text-zinc-300 border border-zinc-800 px-2 py-0.5 rounded text-[10px] font-bold">
                     {v.category}
@@ -351,10 +364,11 @@ export default function AdminVideosPage() {
           </div>
         ))}
       </div>
+      </div>
 
       {/* Modal de Publicar Novo Vídeo +18 (Melhorado) */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
+        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
           <div className="bg-[#121215] border border-zinc-800 w-full max-w-2xl rounded-3xl p-6 sm:p-8 shadow-2xl relative space-y-6 my-8">
             
             {/* Header do Modal */}
@@ -408,20 +422,20 @@ export default function AdminVideosPage() {
                 </div>
               </div>
 
-              {/* Descrição */}
+              {/* Descrição / Legenda */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-zinc-300">Descrição / Detalhes</label>
+                <label className="text-xs font-semibold text-zinc-300">Legenda do Vídeo</label>
                 <textarea 
                   rows={2}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Escreva uma breve descrição do vídeo..."
+                  placeholder="Escreva a legenda ou descrição do vídeo..."
                   className="w-full bg-zinc-900 border border-zinc-800 text-white text-xs rounded-xl p-3 focus:outline-none focus:border-red-500 transition-colors placeholder:text-zinc-600 resize-none"
                 />
               </div>
 
-              {/* Preços (Compra e Aluguer) & Duração da Prévia */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-zinc-900/60 p-4 rounded-2xl border border-zinc-800">
+              {/* Preços (Compra e Aluguer) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-zinc-900/60 p-4 rounded-2xl border border-zinc-800">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-emerald-400">Preço Compra Definitiva (MT)</label>
                   <input 
@@ -443,53 +457,10 @@ export default function AdminVideosPage() {
                     className="w-full bg-zinc-900 border border-zinc-800 text-white text-xs rounded-xl px-3 py-2.5 font-bold focus:outline-none focus:border-amber-500"
                   />
                 </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-red-400">Prévia Grátis (Segundos)</label>
-                  <select
-                    value={previewSeconds}
-                    onChange={(e) => setPreviewSeconds(e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-800 text-white text-xs rounded-xl px-3 py-2.5 font-bold outline-none focus:border-red-500"
-                  >
-                    <option value="10">10 Segundos</option>
-                    <option value="15">15 Segundos (Recomendado)</option>
-                    <option value="30">30 Segundos</option>
-                    <option value="45">45 Segundos</option>
-                    <option value="60">60 Segundos</option>
-                  </select>
-                </div>
               </div>
 
-              {/* Uploads (Capa / Thumbnail + Ficheiro de Vídeo) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                
-                {/* Upload de Capa */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-                    <ImageIcon className="w-3.5 h-3.5 text-red-400" /> Capa do Vídeo (Thumbnail) *
-                  </label>
-                  <div 
-                    onClick={() => thumbnailInputRef.current?.click()}
-                    className="border-2 border-dashed border-zinc-800 hover:border-red-500/50 bg-zinc-900/60 rounded-2xl p-4 text-center cursor-pointer transition-all h-36 flex flex-col items-center justify-center overflow-hidden relative group"
-                  >
-                    {thumbnailPreview ? (
-                      <img src={thumbnailPreview} alt="Preview" className="w-full h-full object-cover rounded-xl" />
-                    ) : (
-                      <>
-                        <ImageIcon className="w-7 h-7 text-zinc-500 mb-1 group-hover:scale-110 transition-transform" />
-                        <span className="text-xs text-zinc-400 font-medium">Carregar Capa</span>
-                        <span className="text-[10px] text-zinc-600">.jpg, .png ou .webp</span>
-                      </>
-                    )}
-                    <input 
-                      type="file" 
-                      ref={thumbnailInputRef} 
-                      onChange={handleThumbnailChange} 
-                      accept="image/*" 
-                      className="hidden" 
-                    />
-                  </div>
-                </div>
+              {/* Uploads (Ficheiro de Vídeo) */}
+              <div className="grid grid-cols-1 gap-4">
 
                 {/* Upload do Arquivo de Vídeo */}
                 <div className="space-y-1.5">
@@ -564,6 +535,6 @@ export default function AdminVideosPage() {
         </div>
       )}
 
-    </div>
+    </>
   );
 }

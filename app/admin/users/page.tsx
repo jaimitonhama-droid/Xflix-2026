@@ -24,16 +24,21 @@ export default function AdminUsersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const fetchUsers = async () => {
     setIsLoading(true);
+    setErrorMsg(null);
     try {
       const { data: profiles, error } = await supabase
         .from("profiles")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error || !profiles || profiles.length === 0) {
+      if (error) {
+        throw error;
+      }
+      if (!profiles || profiles.length === 0) {
         setUsers([]);
       } else {
         const mapped: UserProfile[] = profiles.map((p: any) => ({
@@ -47,8 +52,9 @@ export default function AdminUsersPage() {
         }));
         setUsers(mapped);
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error("Erro ao buscar usuários:", err);
+      setErrorMsg(err.message || "Falha de conexão com a base de dados.");
       setUsers([]);
     } finally {
       setIsLoading(false);
@@ -109,73 +115,82 @@ export default function AdminUsersPage() {
       {/* Cabeçalho */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight">Estatísticas & Membros da Plataforma</h1>
-          <p className="text-sm text-zinc-400">Acompanhe o crescimento dos utilizadores, acessos via celular e clientes VIP.</p>
+          <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-tight">Membros da Plataforma</h1>
+          <p className="text-xs sm:text-sm text-zinc-400 mt-1">Crescimento de utilizadores e clientes VIP.</p>
         </div>
         <button 
           onClick={fetchUsers}
-          className="flex items-center gap-2 bg-[#121215] border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm self-start sm:self-auto"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#121215] border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white px-3 py-2.5 sm:py-2 rounded-xl text-xs font-semibold transition-all shadow-sm"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} /> Atualizar Lista
         </button>
       </div>
 
+      {errorMsg && (
+        <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl text-sm font-semibold flex items-center justify-between gap-4 animate-fade-in">
+          <span>Ocorreu um erro ao carregar os dados: {errorMsg}. Por favor, verifique a sua ligação à internet.</span>
+          <button onClick={() => setErrorMsg(null)} className="p-1 hover:bg-red-500/20 rounded-md transition-colors">
+            <XCircle className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* 4 Cards de Métricas Principais (Valores Dinâmicos Reais) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         
         {/* Total de Usuários */}
-        <div className="bg-[#121215]/90 border border-zinc-800/80 hover:border-red-500/30 rounded-2xl p-5 shadow-lg relative overflow-hidden group transition-all duration-300 backdrop-blur-xl">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-zinc-400 text-xs font-semibold uppercase tracking-wider">Total de Membros</span>
-            <div className="w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400">
-              <Users className="w-4 h-4" />
+        <div className="bg-[#121215]/90 border border-zinc-800/80 hover:border-red-500/30 rounded-2xl p-3.5 sm:p-5 shadow-lg relative overflow-hidden group transition-all duration-300 backdrop-blur-xl min-w-0">
+          <div className="flex items-center justify-between mb-3 gap-1">
+            <span className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider truncate flex-1">Membros</span>
+            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 shrink-0">
+              <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <h3 className="text-2xl font-black text-white tracking-tight mb-3">{totalMembers}</h3>
-          <div className="inline-flex items-center gap-1.5 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-lg text-xs font-bold text-red-400">
-            <ArrowUpRight className="w-3.5 h-3.5" /> Registos em Tempo Real
+          <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight mb-2 sm:mb-3 truncate">{totalMembers}</h3>
+          <div className="hidden sm:inline-flex items-center gap-1.5 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-lg text-xs font-bold text-red-400">
+            <ArrowUpRight className="w-3.5 h-3.5" /> Registos
           </div>
         </div>
 
         {/* Usuários Ativos */}
-        <div className="bg-[#121215]/90 border border-zinc-800/80 hover:border-emerald-500/30 rounded-2xl p-5 shadow-lg relative overflow-hidden group transition-all duration-300 backdrop-blur-xl">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-zinc-400 text-xs font-semibold uppercase tracking-wider">Ativos Hoje</span>
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-              <UserCheck className="w-4 h-4" />
+        <div className="bg-[#121215]/90 border border-zinc-800/80 hover:border-emerald-500/30 rounded-2xl p-3.5 sm:p-5 shadow-lg relative overflow-hidden group transition-all duration-300 backdrop-blur-xl min-w-0">
+          <div className="flex items-center justify-between mb-3 gap-1">
+            <span className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider truncate flex-1">Ativos Hoje</span>
+            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+              <UserCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <h3 className="text-2xl font-black text-white tracking-tight mb-3">{totalMembers} Membros</h3>
-          <div className="inline-flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg text-xs font-bold text-emerald-400">
-            <ArrowUpRight className="w-3.5 h-3.5" /> Membros Conetados
+          <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight mb-2 sm:mb-3 truncate">{totalMembers}</h3>
+          <div className="hidden sm:inline-flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg text-xs font-bold text-emerald-400">
+            <ArrowUpRight className="w-3.5 h-3.5" /> Conetados
           </div>
         </div>
 
         {/* Clientes VIP Pagantes */}
-        <div className="bg-[#121215]/90 border border-zinc-800/80 hover:border-amber-500/30 rounded-2xl p-5 shadow-lg relative overflow-hidden group transition-all duration-300 backdrop-blur-xl">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-zinc-400 text-xs font-semibold uppercase tracking-wider">Clientes VIP (Pagantes)</span>
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-              <ShieldCheck className="w-4 h-4" />
+        <div className="bg-[#121215]/90 border border-zinc-800/80 hover:border-amber-500/30 rounded-2xl p-3.5 sm:p-5 shadow-lg relative overflow-hidden group transition-all duration-300 backdrop-blur-xl min-w-0">
+          <div className="flex items-center justify-between mb-3 gap-1">
+            <span className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider truncate flex-1">VIPs (Pago)</span>
+            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+              <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <h3 className="text-2xl font-black text-white tracking-tight mb-3">{vipMembers} VIPs</h3>
-          <div className="inline-flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg text-xs font-bold text-amber-400">
-            <ArrowUpRight className="w-3.5 h-3.5" /> Acessos Confirmados
+          <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight mb-2 sm:mb-3 truncate">{vipMembers} VIPs</h3>
+          <div className="hidden sm:inline-flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg text-xs font-bold text-amber-400">
+            <ArrowUpRight className="w-3.5 h-3.5" /> Confirmados
           </div>
         </div>
 
         {/* Ticket Médio */}
-        <div className="bg-[#121215]/90 border border-zinc-800/80 hover:border-purple-500/30 rounded-2xl p-5 shadow-lg relative overflow-hidden group transition-all duration-300 backdrop-blur-xl">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-zinc-400 text-xs font-semibold uppercase tracking-wider">Ticket Médio / Cliente</span>
-            <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
-              <DollarSign className="w-4 h-4" />
+        <div className="bg-[#121215]/90 border border-zinc-800/80 hover:border-purple-500/30 rounded-2xl p-3.5 sm:p-5 shadow-lg relative overflow-hidden group transition-all duration-300 backdrop-blur-xl min-w-0">
+          <div className="flex items-center justify-between mb-3 gap-1">
+            <span className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider truncate flex-1">Ticket Médio</span>
+            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 shrink-0">
+              <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <h3 className="text-2xl font-black text-white tracking-tight mb-3">MT 0</h3>
-          <div className="inline-flex items-center gap-1.5 bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 rounded-lg text-xs font-bold text-purple-400">
-            <ArrowUpRight className="w-3.5 h-3.5" /> Média por compras
+          <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight mb-2 sm:mb-3 truncate">MT 0</h3>
+          <div className="hidden sm:inline-flex items-center gap-1.5 bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 rounded-lg text-xs font-bold text-purple-400">
+            <ArrowUpRight className="w-3.5 h-3.5" /> Média
           </div>
         </div>
 
@@ -185,7 +200,7 @@ export default function AdminUsersPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Gráfico de Visitas (Mantido e Renderizado) */}
-        <div className="bg-[#121215]/90 border border-zinc-800/80 rounded-2xl p-6 lg:col-span-2 shadow-xl backdrop-blur-xl flex flex-col justify-between">
+        <div className="bg-[#121215]/90 border border-zinc-800/80 rounded-2xl p-4 sm:p-6 lg:col-span-2 shadow-xl backdrop-blur-xl flex flex-col justify-between overflow-hidden min-w-0">
           <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-6">
             <div>
               <h2 className="text-white font-bold text-lg tracking-tight">Visão Geral de Acessos</h2>
@@ -272,44 +287,44 @@ export default function AdminUsersPage() {
             <p className="text-xs text-zinc-500 font-medium">Gerencie contas, acessos VIP e concessões de conteúdo</p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+            <div className="relative w-full sm:w-auto">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
               <input 
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Buscar utilizador ou e-mail..."
-                className="bg-zinc-900 border border-zinc-800 text-white text-xs rounded-xl pl-9 pr-3 py-2 outline-none focus:border-red-500 w-48 sm:w-64"
+                placeholder="Buscar utilizador..."
+                className="bg-zinc-900 border border-zinc-800 text-white text-xs rounded-xl pl-9 pr-3 py-2.5 sm:py-2 outline-none focus:border-red-500 w-full sm:w-64"
               />
             </div>
 
-            <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-xl p-1 text-xs">
+            <div className="grid grid-cols-3 sm:flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-xl p-1 text-xs w-full sm:w-auto">
               <button 
                 onClick={() => setFilterStatus("all")}
-                className={`px-3 py-1 rounded-lg font-bold transition-all ${filterStatus === "all" ? "bg-red-600 text-white" : "text-zinc-400"}`}
+                className={`py-2 sm:py-1 rounded-lg font-bold transition-all text-center ${filterStatus === "all" ? "bg-red-600 text-white" : "text-zinc-400"}`}
               >
                 Todos
               </button>
               <button 
                 onClick={() => setFilterStatus("vip")}
-                className={`px-3 py-1 rounded-lg font-bold transition-all ${filterStatus === "vip" ? "bg-red-600 text-white" : "text-zinc-400"}`}
+                className={`py-2 sm:py-1 rounded-lg font-bold transition-all text-center ${filterStatus === "vip" ? "bg-red-600 text-white" : "text-zinc-400"}`}
               >
                 VIPs
               </button>
               <button 
                 onClick={() => setFilterStatus("free")}
-                className={`px-3 py-1 rounded-lg font-bold transition-all ${filterStatus === "free" ? "bg-red-600 text-white" : "text-zinc-400"}`}
+                className={`py-2 sm:py-1 rounded-lg font-bold transition-all text-center ${filterStatus === "free" ? "bg-red-600 text-white" : "text-zinc-400"}`}
               >
-                Gratuitos
+                Grátis
               </button>
             </div>
           </div>
         </div>
 
         {/* Tabela de Usuários */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+        <div className="overflow-x-auto pb-2">
+          <table className="w-full min-w-[700px] text-left text-xs">
             <thead className="text-zinc-300 uppercase tracking-wider border-b border-zinc-700/80 font-bold text-xs">
               <tr>
                 <th className="pb-3.5 pt-1">Utilizador & E-mail</th>

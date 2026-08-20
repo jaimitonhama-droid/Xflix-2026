@@ -62,14 +62,11 @@ export default function RegisterPage() {
             )}
 
             <div className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-zinc-300 block ml-0.5" htmlFor="xflix-reg-name">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-zinc-300 block ml-1" htmlFor="xflix-reg-name">
                   Nome Completo
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <User className="h-4 w-4 text-zinc-500" />
-                  </div>
                   <input
                     id="xflix-reg-name"
                     name="name"
@@ -79,19 +76,16 @@ export default function RegisterPage() {
                     autoComplete="new-password"
                     placeholder="Seu nome completo"
                     required
-                    className="block w-full h-11 pl-11 pr-4 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
+                    className="block w-full h-12 pl-5 pr-4 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-zinc-300 block ml-0.5" htmlFor="xflix-reg-email">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-zinc-300 block ml-1" htmlFor="xflix-reg-email">
                   Endereço de E-mail
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Mail className="h-4 w-4 text-zinc-500" />
-                  </div>
                   <input
                     id="xflix-reg-email"
                     name="email"
@@ -101,19 +95,16 @@ export default function RegisterPage() {
                     autoComplete="new-password"
                     placeholder="seu.email@exemplo.com"
                     required
-                    className="block w-full h-11 pl-11 pr-4 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
+                    className="block w-full h-12 pl-5 pr-4 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-zinc-300 block ml-0.5" htmlFor="xflix-reg-password">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-zinc-300 block ml-1" htmlFor="xflix-reg-password">
                   Senha
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Lock className="h-4 w-4 text-zinc-500" />
-                  </div>
                   <input
                     id="xflix-reg-password"
                     name="password"
@@ -124,7 +115,7 @@ export default function RegisterPage() {
                     placeholder="Mínimo 6 caracteres"
                     required
                     minLength={6}
-                    className="block w-full h-11 pl-11 pr-11 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
+                    className="block w-full h-12 pl-5 pr-11 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
                   />
                   <button
                     type="button"
@@ -136,14 +127,11 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-zinc-300 block ml-0.5" htmlFor="xflix-reg-confirmpass">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-zinc-300 block ml-1" htmlFor="xflix-reg-confirmpass">
                   Confirmar Senha
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <ShieldCheck className="h-4 w-4 text-zinc-500" />
-                  </div>
                   <input
                     id="xflix-reg-confirmpass"
                     name="confirmPassword"
@@ -154,7 +142,7 @@ export default function RegisterPage() {
                     placeholder="Repita a senha"
                     required
                     minLength={6}
-                    className={`block w-full h-11 pl-11 pr-11 border rounded-2xl bg-[#18181b]/90 text-white text-xs placeholder-zinc-500 focus:outline-none font-medium transition-all ${
+                    className={`block w-full h-12 pl-5 pr-11 border rounded-2xl bg-[#18181b]/90 text-white text-sm placeholder-zinc-500 focus:outline-none font-medium transition-all ${
                       isPasswordMismatch
                         ? "border-red-600 focus:border-red-600 focus:ring-2 focus:ring-red-600/30"
                         : "border-zinc-800/90 focus:border-red-600 focus:ring-2 focus:ring-red-600/30"

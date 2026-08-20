@@ -1,26 +1,78 @@
 "use client";
 
 import { notFound } from "next/navigation";
-import { useState, use } from "react";
+import { useState, use, useEffect } from "react";
 import { VideoActions } from "./VideoActions";
 import { VideoCard } from "@/components/ui/VideoCard";
 import { PreviewPlayer } from "@/components/ui/PreviewPlayer";
-import { PaywallModal } from "@/components/ui/PaywallModal";
 import { Eye, ShieldCheck, Film, ThumbsUp, MessageSquare } from "lucide-react";
 
-// Mock para simular banco. Substituir por chamada real no Supabase depois.
-const MOCK_VIDEOS = [
-  { id: "1", title: "Curso Completo de Design", category: "Design", duration: "02:15:00", likes: 1200, comments: 342, views: "15K", description: "Aprenda do zero ao avançado.", price: 500, rentalPrice: 100, preview_url: "https://www.w3schools.com/html/mov_bbb.mp4", thumbnail_url: "https://images.unsplash.com/photo-1542051812871-757500d5a228?q=80&w=2000&auto=format&fit=crop" },
-];
+import { createClient } from "@/services/supabase/client";
 
 export default function VideoDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const [isPaywallOpen, setIsPaywallOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   
-  // Simulação de busca no banco
-  const video = MOCK_VIDEOS.find(v => v.id === resolvedParams.id) || MOCK_VIDEOS[0];
+  const [video, setVideo] = useState<any>(null);
+  const [relatedVideos, setRelatedVideos] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
+  const supabase = createClient();
+
+  useEffect(() => {
+    const fetchVideo = async () => {
+      try {
+        const { data: videoData } = await supabase
+          .from("videos")
+          .select("*, category:categories(name)")
+          .eq("id", resolvedParams.id)
+          .single();
+
+        if (videoData) {
+          setVideo(videoData);
+          
+          let query = supabase.from("videos").select("*, category:categories(name)").neq("id", videoData.id).eq("status", "published").limit(8);
+          if (videoData.category_id) {
+            query = query.eq("category_id", videoData.category_id);
+          }
+          
+          const { data: relatedData } = await query;
+          if (relatedData) setRelatedVideos(relatedData);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchVideo();
+  }, [resolvedParams.id]);
+
+  if (isLoading) {
+    return (
+      <div className="w-full pb-16 animate-pulse">
+        <div className="w-full bg-zinc-900 border-b border-zinc-800 aspect-video md:h-[60vh]" />
+        <div className="max-w-7xl mx-auto px-6 md:px-8 mt-8 md:mt-12">
+          <div className="flex flex-col lg:flex-row gap-12">
+            <div className="flex-1">
+              <div className="h-4 w-24 bg-zinc-800 rounded mb-4" />
+              <div className="h-10 w-3/4 bg-zinc-800 rounded mb-4" />
+              <div className="h-6 w-1/2 bg-zinc-800 rounded mb-8" />
+              <div className="space-y-3">
+                <div className="h-4 w-full bg-zinc-800 rounded" />
+                <div className="h-4 w-full bg-zinc-800 rounded" />
+                <div className="h-4 w-2/3 bg-zinc-800 rounded" />
+              </div>
+            </div>
+            <div className="w-full lg:w-[350px] flex-shrink-0 pt-4 md:pt-14">
+               <div className="h-48 w-full bg-zinc-800 rounded-xl" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   if (!video) {
     notFound();
   }
@@ -31,10 +83,8 @@ export default function VideoDetailsPage({ params }: { params: Promise<{ id: str
       <div className="w-full bg-[#030303] border-b border-zinc-900 pt-0 md:pt-6">
         <div className="max-w-7xl mx-auto px-0 md:px-4">
           <PreviewPlayer 
-            src={video.preview_url}
-            poster={video.thumbnail_url}
-            limitSeconds={10}
-            onLimitReached={() => setIsPaywallOpen(true)}
+            src={video.video_url}
+            poster={video.thumbnail_url || undefined}
           />
         </div>
       </div>
@@ -47,7 +97,7 @@ export default function VideoDetailsPage({ params }: { params: Promise<{ id: str
             <div className="flex items-center gap-3 mb-4">
               <div className="flex items-center gap-1.5 text-zinc-400 text-sm font-medium">
                 <Film className="w-4 h-4" />
-                {video.duration}
+                {`${Math.floor((video.duration || 15) / 60)}:${((video.duration || 15) % 60).toString().padStart(2, '0')}`}
               </div>
             </div>
 
@@ -58,22 +108,22 @@ export default function VideoDetailsPage({ params }: { params: Promise<{ id: str
             <div className="flex flex-wrap items-center gap-8 text-base text-zinc-300 mb-8 font-bold">
               <div className="flex items-center gap-2.5 hover:text-white transition-colors cursor-default" title="Visualizações">
                 <Eye className="w-5 h-5 text-zinc-500" />
-                {video.views}
+                0
               </div>
               <div className="flex items-center gap-2.5 hover:text-white transition-colors cursor-default" title="Curtidas">
                 <ThumbsUp className="w-5 h-5 text-zinc-500" />
-                {video.likes}
+                0
               </div>
               <div className="flex items-center gap-2.5 hover:text-white transition-colors cursor-pointer" title="Comentários">
                 <MessageSquare className="w-5 h-5 text-zinc-500" />
-                {video.comments}
+                0
               </div>
             </div>
 
             <div className="pt-2 md:pt-4">
               <h3 className="text-white font-bold mb-2">Sinopse</h3>
               <p className="text-zinc-400 leading-relaxed text-sm md:text-base">
-                {video.description}
+                {video.description || "Nenhuma legenda fornecida para este vídeo."}
               </p>
             </div>
           </div>
@@ -85,7 +135,7 @@ export default function VideoDetailsPage({ params }: { params: Promise<{ id: str
                 videoId={video.id} 
                 title={video.title} 
                 price={video.price} 
-                rentalPrice={video.rentalPrice} 
+                rentalPrice={video.rental_price} 
               />
             </div>
           </div>
@@ -96,16 +146,24 @@ export default function VideoDetailsPage({ params }: { params: Promise<{ id: str
           <h2 className="text-2xl font-bold text-white tracking-tight mb-6">Você também vai gostar</h2>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {/* Mocking recomendados */}
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            {relatedVideos.map((rv) => (
               <VideoCard 
-                key={i}
-                id={i.toString()}
-                title={`Vídeo Semelhante ${i}`}
-                category={video.category}
-                imageUrl="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=600&auto=format&fit=crop"
+                key={rv.id}
+                id={rv.id}
+                title={rv.title}
+                description={rv.description}
+                category={rv.category?.name || "Sem Categoria"}
+                duration={`${Math.floor((rv.duration || 15) / 60)}:${((rv.duration || 15) % 60).toString().padStart(2, '0')}`}
+                price={rv.price}
+                rentalPrice={rv.rental_price}
+                imageUrl={rv.thumbnail_url}
+                videoUrl={rv.video_url}
+                views="0"
               />
             ))}
+            {relatedVideos.length === 0 && (
+              <p className="text-zinc-500 text-sm col-span-full">Não há vídeos semelhantes no momento.</p>
+            )}
           </div>
 
           {/* Paginação */}
@@ -157,13 +215,6 @@ export default function VideoDetailsPage({ params }: { params: Promise<{ id: str
           </div>
         </div>
       </div>
-
-      <PaywallModal 
-        isOpen={isPaywallOpen} 
-        onClose={() => setIsPaywallOpen(false)} 
-        videoId={video.id} 
-        price={video.rentalPrice || video.price || 150}
-      />
     </div>
   );
 }

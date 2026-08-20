@@ -12,10 +12,11 @@ const ALL_MOCK_VIDEOS = Array.from({ length: 24 }).map((_, i) => ({
   imageUrl: `https://images.unsplash.com/photo-1542051812871-757500d5a228?q=80&w=600&auto=format&fit=crop&sig=${i}`
 }));
 
-export default function SearchPage({ searchParams }: { searchParams: { q?: string, sort?: string, page?: string } }) {
-  const query = searchParams.q || "";
-  const sort = searchParams.sort || "newest";
-  const page = parseInt(searchParams.page || "1", 10);
+export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string, sort?: string, page?: string }> }) {
+  const params = await searchParams;
+  const query = params.q || "";
+  const sort = params.sort || "newest";
+  const page = parseInt(params.page || "1", 10);
   
   const ITEMS_PER_PAGE = 12;
 

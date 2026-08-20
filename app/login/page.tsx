@@ -132,14 +132,11 @@ export default function LoginPage() {
 
               <div className="space-y-3.5">
                 {/* Campo NOME */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-300 block ml-0.5" htmlFor="xflix-reg-fullname">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-300 block ml-1" htmlFor="xflix-reg-fullname">
                     Nome Completo
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <User className="h-4 w-4 text-zinc-500" />
-                    </div>
                     <input
                       id="xflix-reg-fullname"
                       name="name"
@@ -149,20 +146,17 @@ export default function LoginPage() {
                       autoComplete="off"
                       placeholder="Seu nome completo"
                       required
-                      className="block w-full h-11 pl-11 pr-4 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
+                      className="block w-full h-12 pl-5 pr-4 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
                     />
                   </div>
                 </div>
 
                 {/* Campo GMAIL / E-MAIL */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-300 block ml-0.5" htmlFor="xflix-reg-emailaddr">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-300 block ml-1" htmlFor="xflix-reg-emailaddr">
                     Gmail / Endereço de E-mail
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <Mail className="h-4 w-4 text-zinc-500" />
-                    </div>
                     <input
                       id="xflix-reg-emailaddr"
                       name="email"
@@ -172,20 +166,17 @@ export default function LoginPage() {
                       autoComplete="off"
                       placeholder="seu.email@gmail.com"
                       required
-                      className="block w-full h-11 pl-11 pr-4 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
+                      className="block w-full h-12 pl-5 pr-4 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
                     />
                   </div>
                 </div>
 
                 {/* Campo SENHA */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-300 block ml-0.5" htmlFor="xflix-reg-newpass">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-300 block ml-1" htmlFor="xflix-reg-newpass">
                     Senha
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <Lock className="h-4 w-4 text-zinc-500" />
-                    </div>
                     <input
                       id="xflix-reg-newpass"
                       name="password"
@@ -196,7 +187,7 @@ export default function LoginPage() {
                       placeholder="••••••••"
                       required
                       minLength={6}
-                      className="block w-full h-11 pl-11 pr-11 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
+                      className="block w-full h-12 pl-5 pr-11 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
                     />
                     <button
                       type="button"
@@ -210,14 +201,11 @@ export default function LoginPage() {
                 </div>
 
                 {/* Campo CONFIRMAR SENHA */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-300 block ml-0.5" htmlFor="xflix-reg-confpass">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-300 block ml-1" htmlFor="xflix-reg-confpass">
                     Confirmar Senha
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <ShieldCheck className="h-4 w-4 text-zinc-500" />
-                    </div>
                     <input
                       id="xflix-reg-confpass"
                       name="confirmPassword"
@@ -228,7 +216,7 @@ export default function LoginPage() {
                       placeholder="Repita a senha"
                       required
                       minLength={6}
-                      className={`block w-full h-11 pl-11 pr-11 border rounded-2xl bg-[#18181b]/90 text-white text-xs placeholder-zinc-500 focus:outline-none font-medium transition-all ${
+                      className={`block w-full h-12 pl-5 pr-11 border rounded-2xl bg-[#18181b]/90 text-white text-sm placeholder-zinc-500 focus:outline-none font-medium transition-all ${
                         isPasswordMismatch
                           ? "border-red-600 focus:border-red-600 focus:ring-2 focus:ring-red-600/30"
                           : "border-zinc-800/90 focus:border-red-600 focus:ring-2 focus:ring-red-600/30"
@@ -315,14 +303,11 @@ export default function LoginPage() {
 
               <div className="space-y-3.5">
                 {/* Campo E-MAIL */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-300 block ml-0.5" htmlFor="xflix-login-emailaddr">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-300 block ml-1" htmlFor="xflix-login-emailaddr">
                     Gmail / Endereço de E-mail
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <Mail className="h-4 w-4 text-zinc-500" />
-                    </div>
                     <input
                       id="xflix-login-emailaddr"
                       name="email"
@@ -332,13 +317,13 @@ export default function LoginPage() {
                       autoComplete="off"
                       placeholder="seu.email@gmail.com"
                       required
-                      className="block w-full h-11 pl-11 pr-4 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
+                      className="block w-full h-12 pl-5 pr-4 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
                     />
                   </div>
                 </div>
 
                 {/* Campo SENHA */}
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   <div className="flex items-center justify-between ml-0.5">
                     <label className="text-xs font-semibold text-zinc-300" htmlFor="xflix-login-curpass">
                       Senha
@@ -348,9 +333,6 @@ export default function LoginPage() {
                     </Link>
                   </div>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <Lock className="h-4 w-4 text-zinc-500" />
-                    </div>
                     <input
                       id="xflix-login-curpass"
                       name="password"
@@ -360,7 +342,7 @@ export default function LoginPage() {
                       autoComplete="current-password"
                       placeholder="••••••••"
                       required
-                      className="block w-full h-11 pl-11 pr-11 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
+                      className="block w-full h-12 pl-5 pr-11 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
                     />
                     <button
                       type="button"

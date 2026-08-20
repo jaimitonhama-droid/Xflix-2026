@@ -42,6 +42,16 @@ export function PreviewPlayer({
     }
   }, [expiresAt]);
 
+  useEffect(() => {
+    if (videoRef.current && src) {
+      videoRef.current.load();
+      // Tentativa de auto-play na montagem/mudança de source
+      videoRef.current.play().catch(() => {
+        // Ignora erro se o navegador bloquear autoplay
+      });
+    }
+  }, [src]);
+
   // Format time (e.g., 01:23)
   const formatTime = (time: number) => {
     if (isNaN(time)) return "00:00";
@@ -175,7 +185,10 @@ export function PreviewPlayer({
         playsInline
         autoPlay
         muted
+        preload="auto"
       />
+
+
 
       {/* Botão de Play Gigante no Centro */}
       {!isPlaying && !limitReached && (
