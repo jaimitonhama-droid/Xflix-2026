@@ -89,13 +89,6 @@ export default function AdminVideosPage() {
   const captureVideoRef = useRef<HTMLVideoElement>(null);
   const captureCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Limpar URLs quando o componente desmontar
-  useEffect(() => {
-    return () => {
-      if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl);
-      if (thumbnailPreviewUrl) URL.revokeObjectURL(thumbnailPreviewUrl);
-    };
-  }, [videoPreviewUrl, thumbnailPreviewUrl]);
 
   const fetchVideos = async () => {
     setIsLoading(true);
@@ -282,8 +275,10 @@ export default function AdminVideosPage() {
     setPrice("500");
     setRentalPrice("150");
     setVideoFile(null);
+    if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl);
     setVideoPreviewUrl(null);
     setThumbnailFile(null);
+    if (thumbnailPreviewUrl) URL.revokeObjectURL(thumbnailPreviewUrl);
     setThumbnailPreviewUrl(null);
     setUploadProgress(0);
   };
@@ -588,6 +583,7 @@ export default function AdminVideosPage() {
                           ref={captureVideoRef}
                           src={videoPreviewUrl} 
                           controls
+                          crossOrigin="anonymous"
                           className="w-full aspect-video bg-black rounded-xl object-contain border border-zinc-800"
                         />
                         <button 
