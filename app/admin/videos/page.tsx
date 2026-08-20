@@ -79,8 +79,23 @@ export default function AdminVideosPage() {
 
   // Ficheiros Selecionados
   const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
+  
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailPreviewUrl, setThumbnailPreviewUrl] = useState<string | null>(null);
   
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const thumbInputRef = useRef<HTMLInputElement>(null);
+  const captureVideoRef = useRef<HTMLVideoElement>(null);
+  const captureCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Limpar URLs quando o componente desmontar
+  useEffect(() => {
+    return () => {
+      if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl);
+      if (thumbnailPreviewUrl) URL.revokeObjectURL(thumbnailPreviewUrl);
+    };
+  }, [videoPreviewUrl, thumbnailPreviewUrl]);
 
   const fetchVideos = async () => {
     setIsLoading(true);
@@ -121,7 +136,42 @@ export default function AdminVideosPage() {
   // Selecionar Vídeo
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setVideoFile(e.target.files[0]);
+      const file = e.target.files[0];
+      setVideoFile(file);
+      if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl);
+      setVideoPreviewUrl(URL.createObjectURL(file));
+      setThumbnailFile(null);
+      setThumbnailPreviewUrl(null);
+    }
+  };
+
+  const captureFrame = () => {
+    const video = captureVideoRef.current;
+    const canvas = captureCanvasRef.current;
+    if (video && canvas) {
+      canvas.width = video.videoWidth || 1280;
+      canvas.height = video.videoHeight || 720;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const file = new File([blob], "thumbnail.jpg", { type: "image/jpeg" });
+            setThumbnailFile(file);
+            if (thumbnailPreviewUrl) URL.revokeObjectURL(thumbnailPreviewUrl);
+            setThumbnailPreviewUrl(URL.createObjectURL(blob));
+          }
+        }, "image/jpeg", 0.85);
+      }
+    }
+  };
+
+  const handleThumbChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setThumbnailFile(file);
+      if (thumbnailPreviewUrl) URL.revokeObjectURL(thumbnailPreviewUrl);
+      setThumbnailPreviewUrl(URL.createObjectURL(file));
     }
   };
 
@@ -157,6 +207,30 @@ export default function AdminVideosPage() {
         .from('videos')
         .getPublicUrl(videoFileName);
       
+      setUploadProgress(70);
+
+      // 2. Upload da Capa (se houver)
+      let finalThumbnailUrl = null;
+      if (thumbnailFile) {
+         const thumbExt = thumbnailFile.name.split('.').pop() || 'jpg';
+         const thumbFileName = `${Date.now()}-thumb.${thumbExt}`;
+         const { error: thumbError } = await supabase.storage
+           .from('videos') // Upload no mesmo bucket para evitar problemas
+           .upload(thumbFileName, thumbnailFile, {
+             cacheControl: '3600',
+             contentType: thumbnailFile.type
+           });
+           
+         if (thumbError) {
+             console.warn("Erro no upload da capa:", thumbError);
+         } else {
+             const { data: { publicUrl: tUrl } } = supabase.storage
+                .from('videos')
+                .getPublicUrl(thumbFileName);
+             finalThumbnailUrl = tUrl;
+         }
+      }
+
       setUploadProgress(85);
 
       // 3. Buscar ID da categoria selecionada
@@ -177,7 +251,7 @@ export default function AdminVideosPage() {
           price: parseFloat(price) || 0,
           rental_price: parseFloat(rentalPrice) || 0,
           status: "published",
-          thumbnail_url: null,
+          thumbnail_url: finalThumbnailUrl,
           video_url: videoUrl,
           category_id: catData?.id || null
         })
@@ -208,6 +282,9 @@ export default function AdminVideosPage() {
     setPrice("500");
     setRentalPrice("150");
     setVideoFile(null);
+    setVideoPreviewUrl(null);
+    setThumbnailFile(null);
+    setThumbnailPreviewUrl(null);
     setUploadProgress(0);
   };
 
@@ -494,6 +571,64 @@ export default function AdminVideosPage() {
                   </div>
                 </div>
 
+                {/* Extrator de Capa (Visível apenas se houver vídeo) */}
+                {videoPreviewUrl && (
+                  <div className="space-y-3 bg-zinc-900/40 p-4 rounded-2xl border border-zinc-800 animate-fade-in">
+                    <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
+                      <ImageIcon className="w-3.5 h-3.5 text-red-400" /> Capa do Vídeo (Thumbnail)
+                    </label>
+                    <p className="text-[10px] text-zinc-500">
+                      Reproduza o vídeo até à cena desejada e clique em "Capturar Cena Atual", ou carregue uma imagem do seu telemóvel.
+                    </p>
+                    
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      {/* Video Player para captura */}
+                      <div className="flex-1 space-y-2">
+                        <video 
+                          ref={captureVideoRef}
+                          src={videoPreviewUrl} 
+                          controls
+                          className="w-full aspect-video bg-black rounded-xl object-contain border border-zinc-800"
+                        />
+                        <button 
+                          type="button"
+                          onClick={captureFrame}
+                          className="w-full bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold py-2 rounded-xl transition-colors"
+                        >
+                          Capturar Cena Atual
+                        </button>
+                      </div>
+
+                      {/* Preview da Capa Selecionada */}
+                      <div className="flex-1 space-y-2">
+                        <div className="w-full aspect-video bg-zinc-950 rounded-xl border border-zinc-800 flex items-center justify-center overflow-hidden relative">
+                           {thumbnailPreviewUrl ? (
+                             <img src={thumbnailPreviewUrl} alt="Thumbnail Preview" className="w-full h-full object-cover" />
+                           ) : (
+                             <span className="text-xs text-zinc-600 font-medium">Nenhuma capa definida</span>
+                           )}
+                           <canvas ref={captureCanvasRef} className="hidden" />
+                        </div>
+                        <div className="flex gap-2">
+                          <button 
+                            type="button"
+                            onClick={() => thumbInputRef.current?.click()}
+                            className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white text-[11px] font-semibold py-2 rounded-xl transition-colors text-center border border-zinc-700"
+                          >
+                            Carregar do Telemóvel
+                          </button>
+                          <input 
+                            type="file"
+                            ref={thumbInputRef}
+                            onChange={handleThumbChange}
+                            accept="image/*"
+                            className="hidden"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Barra de Progresso Real se estiver fazendo Upload */}
