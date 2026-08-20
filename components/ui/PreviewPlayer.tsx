@@ -190,14 +190,14 @@ export function PreviewPlayer({
 
 
 
-      {/* Botão de Play Gigante no Centro */}
+      {/* Botão de Play no Centro (Menor e Transparente) */}
       {!isPlaying && !limitReached && (
         <div 
-          className="absolute inset-0 flex items-center justify-center z-10 bg-black/20 cursor-pointer transition-colors"
+          className="absolute inset-0 flex items-center justify-center z-10 bg-transparent cursor-pointer transition-colors"
           onClick={togglePlay}
         >
-          <div className="p-5 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-            <Play className="w-16 h-16 text-white/80 fill-white/80 drop-shadow-[0_0_10px_rgba(0,0,0,0.8)] ml-1" />
+          <div className="p-3 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+            <Play className="w-12 h-12 text-white/70 fill-white/70 drop-shadow-md ml-1" />
           </div>
         </div>
       )}
@@ -254,14 +254,6 @@ export function PreviewPlayer({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             
-            {/* Play/Pause Button na barra */}
-            <button 
-              onClick={togglePlay} 
-              className="text-white hover:text-red-500 transition-colors focus:outline-none"
-            >
-              {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current" />}
-            </button>
-
             <div className="flex items-center gap-2 group/volume">
               <button onClick={toggleMute} className="text-white hover:text-red-500 transition-colors focus:outline-none">
                 {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
