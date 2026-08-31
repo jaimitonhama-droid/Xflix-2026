@@ -186,7 +186,7 @@ export function PreviewPlayer({
         playsInline
         autoPlay
         muted
-        preload="auto"
+        preload="metadata"
       />
 
 

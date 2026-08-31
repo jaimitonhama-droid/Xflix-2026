@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
@@ -10,13 +10,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const isFirstMount = React.useRef(true);
+
   useEffect(() => {
-    // Open the sidebar by default on mobile if the user is on the root /admin path
-    if (pathname === "/admin" && window.innerWidth < 768) {
-      setIsMobileMenuOpen(true);
-    } else {
-      setIsMobileMenuOpen(false);
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      // Open the sidebar by default on mobile ONLY on the first load of the admin panel
+      if (pathname === "/admin" && window.innerWidth < 768) {
+        setIsMobileMenuOpen(true);
+        return;
+      }
     }
+    
+    // On any subsequent navigation, always close the menu automatically
+    setIsMobileMenuOpen(false);
   }, [pathname]);
 
   // TESTE HABILITADO: Verificação de segurança suspensa temporariamente para você poder testar o visual!

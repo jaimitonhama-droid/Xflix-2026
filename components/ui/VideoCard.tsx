@@ -42,13 +42,17 @@ export function VideoCard({
               src={imageUrl} 
               alt={title} 
               fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              loading="lazy"
               className="object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
             />
           ) : (
             <video 
-              src={videoUrl || ""}
-              preload="auto"
-              className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
+              src={videoUrl ? `${videoUrl}#t=0.1` : ""}
+              preload="metadata"
+              muted
+              playsInline
+              className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500 bg-zinc-900"
             />
           )}
           
