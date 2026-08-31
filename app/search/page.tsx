@@ -1,16 +1,6 @@
 import { VideoCard } from "@/components/ui/VideoCard";
 import { Search, SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
-
-// Simulando dados que viriam do Supabase
-const ALL_MOCK_VIDEOS = Array.from({ length: 24 }).map((_, i) => ({
-  id: `${i + 1}`,
-  title: `Vídeo Incrível ${i + 1}`,
-  category: i % 2 === 0 ? "Premium" : "Vlog",
-  duration: "15:00",
-  price: (i % 3 + 1) * 100,
-  rentalPrice: (i % 3 + 1) * 30,
-  imageUrl: `https://images.unsplash.com/photo-1542051812871-757500d5a228?q=80&w=600&auto=format&fit=crop&sig=${i}`
-}));
+import { createClient } from "@/services/supabase/server";
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string, sort?: string, page?: string }> }) {
   const params = await searchParams;
@@ -20,50 +10,27 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   
   const ITEMS_PER_PAGE = 12;
 
-  /* 
-    =============================================================================
-    CÓDIGO PREPARADO PARA SUPABASE (Descomentar na integração final):
-    =============================================================================
-    const supabase = await createClient();
-    let queryBuilder = supabase.from('videos').select('*, categories(name)').eq('status', 'published');
-    
-    if (query) {
-      // Procura Título, Descrição, Criadores, Palavras-chave
-      queryBuilder = queryBuilder.textSearch('title_description_creator', query);
-    }
-
-    if (categoryFilter !== "all") {
-      queryBuilder = queryBuilder.eq('categories.slug', categoryFilter);
-    }
-    
-    switch(sort) {
-      case 'newest': queryBuilder = queryBuilder.order('created_at', { ascending: false }); break;
-      case 'bestselling': queryBuilder = queryBuilder.order('sales_count', { ascending: false }); break;
-      case 'price-asc': queryBuilder = queryBuilder.order('price', { ascending: true }); break;
-      case 'price-desc': queryBuilder = queryBuilder.order('price', { ascending: false }); break;
-      case 'views': queryBuilder = queryBuilder.order('views', { ascending: false }); break;
-      case 'az': queryBuilder = queryBuilder.order('title', { ascending: true }); break;
-    }
-
-    const { data: videos, count } = await queryBuilder.range((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE - 1);
-    =============================================================================
-  */
-
-  // Simulação de busca local
-  let filtered = ALL_MOCK_VIDEOS;
+  const supabase = await createClient();
+  let queryBuilder = supabase.from('videos').select('*, category:categories(name)', { count: 'exact' }).eq('status', 'published');
+  
   if (query) {
-    filtered = filtered.filter(v => v.title.toLowerCase().includes(query.toLowerCase()));
+    // Busca simples por título e descrição
+    queryBuilder = queryBuilder.or(`title.ilike.%${query}%,description.ilike.%${query}%`);
   }
 
-  // Simulação de Ordenação
-  if (sort === "price-asc") filtered.sort((a, b) => a.price - b.price);
-  if (sort === "price-desc") filtered.sort((a, b) => b.price - a.price);
-  if (sort === "az") filtered.sort((a, b) => a.title.localeCompare(b.title));
-  if (sort === "bestselling") filtered.sort((a, b) => (b.price - b.rentalPrice) - (a.price - a.rentalPrice)); // mock sort
+  // Ordenação
+  switch(sort) {
+    case 'newest': queryBuilder = queryBuilder.order('created_at', { ascending: false }); break;
+    case 'price-asc': queryBuilder = queryBuilder.order('price', { ascending: true }); break;
+    case 'price-desc': queryBuilder = queryBuilder.order('price', { ascending: false }); break;
+    case 'views': queryBuilder = queryBuilder.order('views', { ascending: false }); break;
+    case 'az': queryBuilder = queryBuilder.order('title', { ascending: true }); break;
+  }
 
-  const totalItems = filtered.length;
+  const { data: videos, count } = await queryBuilder.range((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE - 1);
+  const currentVideos = videos || [];
+  const totalItems = count || 0;
   const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
-  const currentVideos = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   return (
     <div className="max-w-7xl mx-auto px-4 w-full py-8 md:py-12 flex flex-col md:flex-row gap-8">
@@ -81,7 +48,6 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
               <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Ordenar por</h4>
               <div className="flex flex-col space-y-2">
                 <a href={`/search?q=${query}&sort=newest`} className={`text-sm py-1.5 px-3 rounded-lg transition-colors ${sort === 'newest' ? 'bg-red-600/20 text-red-500 font-semibold' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}>Mais Recentes</a>
-                <a href={`/search?q=${query}&sort=bestselling`} className={`text-sm py-1.5 px-3 rounded-lg transition-colors ${sort === 'bestselling' ? 'bg-red-600/20 text-red-500 font-semibold' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}>Mais Vendidos</a>
                 <a href={`/search?q=${query}&sort=views`} className={`text-sm py-1.5 px-3 rounded-lg transition-colors ${sort === 'views' ? 'bg-red-600/20 text-red-500 font-semibold' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}>Mais Vistos</a>
                 <a href={`/search?q=${query}&sort=price-asc`} className={`text-sm py-1.5 px-3 rounded-lg transition-colors ${sort === 'price-asc' ? 'bg-red-600/20 text-red-500 font-semibold' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}>Menor Preço</a>
                 <a href={`/search?q=${query}&sort=price-desc`} className={`text-sm py-1.5 px-3 rounded-lg transition-colors ${sort === 'price-desc' ? 'bg-red-600/20 text-red-500 font-semibold' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}>Maior Preço</a>
@@ -108,7 +74,18 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {currentVideos.map(video => (
                 <div key={video.id} className="w-full">
-                  <VideoCard {...video} />
+                  <VideoCard 
+                    id={video.id}
+                    title={video.title}
+                    description={video.description}
+                    category={video.category?.name || "Sem Categoria"}
+                    duration={`${Math.floor((video.duration || 15) / 60)}:${((video.duration || 15) % 60).toString().padStart(2, '0')}`}
+                    price={video.price}
+                    rentalPrice={video.rental_price}
+                    imageUrl={video.thumbnail_url}
+                    videoUrl={video.video_url}
+                    views="0"
+                  />
                 </div>
               ))}
             </div>

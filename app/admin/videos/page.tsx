@@ -17,49 +17,10 @@ interface VideoItem {
   created_at: string;
 }
 
-const MOCK_VIDEOS: VideoItem[] = [
-  {
-    id: "v-1",
-    title: "Cena Exclusiva VIP #01",
-    description: "Conteúdo exclusivo em alta definição 4K.",
-    price: 500,
-    rental_price: 150,
-    category: "Exclusivos VIP",
-    preview_seconds: 15,
-    thumbnail_url: "https://images.unsplash.com/photo-1542051812871-757500d5a228?q=80&w=800&auto=format&fit=crop",
-    video_url: "https://www.w3schools.com/html/mov_bbb.mp4",
-    created_at: "12 Jul 2026",
-  },
-  {
-    id: "v-2",
-    title: "Coleção Premium HD Vol. 2",
-    description: "Sessão especial completa em qualidade alta.",
-    price: 750,
-    rental_price: 200,
-    category: "Cenas Completas HD",
-    preview_seconds: 30,
-    thumbnail_url: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=800&auto=format&fit=crop",
-    video_url: "https://www.w3schools.com/html/mov_bbb.mp4",
-    created_at: "10 Jul 2026",
-  },
-  {
-    id: "v-3",
-    title: "Especial Lançamento +18",
-    description: "Lançamento da semana com acesso ilimitado.",
-    price: 600,
-    rental_price: 180,
-    category: "Lançamentos",
-    preview_seconds: 15,
-    thumbnail_url: "https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=800&auto=format&fit=crop",
-    video_url: "https://www.w3schools.com/html/mov_bbb.mp4",
-    created_at: "05 Jul 2026",
-  },
-];
-
 export default function AdminVideosPage() {
   const supabase = createClient();
 
-  const [videos, setVideos] = useState<VideoItem[]>(MOCK_VIDEOS);
+  const [videos, setVideos] = useState<VideoItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -181,7 +142,16 @@ export default function AdminVideosPage() {
     }
 
     setIsUploading(true);
-    setUploadProgress(10); // Inicia progresso
+    setUploadProgress(5); // Inicia progresso
+
+    // Simulate progress while uploading to prevent the "stuck" feeling
+    const progressInterval = setInterval(() => {
+      setUploadProgress((prev) => {
+        if (prev < 60) return prev + 2;
+        if (prev < 85) return prev + 1;
+        return prev;
+      });
+    }, 1000);
 
     try {
       // 1. Upload do Vídeo Principal
@@ -200,7 +170,8 @@ export default function AdminVideosPage() {
         .from('videos')
         .getPublicUrl(videoFileName);
       
-      setUploadProgress(70);
+      clearInterval(progressInterval);
+      setUploadProgress(85);
 
       // 2. Upload da Capa (se houver)
       let finalThumbnailUrl = null;
@@ -224,7 +195,7 @@ export default function AdminVideosPage() {
          }
       }
 
-      setUploadProgress(85);
+      setUploadProgress(90);
 
       // 3. Buscar ID da categoria selecionada
       const { data: catData } = await supabase
@@ -246,7 +217,8 @@ export default function AdminVideosPage() {
           status: "published",
           thumbnail_url: finalThumbnailUrl,
           video_url: videoUrl,
-          category_id: catData?.id || null
+          category_id: catData?.id || null,
+          duration: parseInt(previewSeconds) || 15
         })
         .select()
         .single();
@@ -262,9 +234,11 @@ export default function AdminVideosPage() {
       resetForm();
 
     } catch (err: any) {
+      clearInterval(progressInterval);
       console.error(err);
       alert("Ocorreu um erro: " + err.message);
     } finally {
+      clearInterval(progressInterval);
       setIsUploading(false);
     }
   };
@@ -308,28 +282,28 @@ export default function AdminVideosPage() {
         {/* Cabeçalho */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-black text-white tracking-tight">Gestão do Catálogo de Vídeos +18</h1>
-            <p className="text-sm text-zinc-400">Adicione novos vídeos, defina capas, preços de aluguer/compra e a prévia gratuita.</p>
+            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">Gestão do Catálogo de Vídeos +18</h1>
+            <p className="text-xs sm:text-sm text-zinc-400 mt-1">Adicione novos vídeos, defina capas, preços de aluguer/compra e a prévia gratuita.</p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <button 
             onClick={fetchVideos}
-            className="flex items-center gap-2 bg-[#121215] border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all shadow-sm"
+            className="flex items-center gap-1.5 sm:gap-2 bg-[#121215] border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-semibold transition-all shadow-sm"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} /> Atualizar
+            <RefreshCw className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isLoading ? 'animate-spin' : ''}`} /> <span className="hidden xs:inline">Atualizar</span>
           </button>
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition-all shadow-[0_0_20px_rgba(220,38,38,0.3)]"
+            className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-bold px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-[10px] sm:text-xs transition-all shadow-[0_0_20px_rgba(220,38,38,0.3)]"
           >
-            <Plus className="w-4 h-4" /> Publicar Novo Vídeo +18
+            <Plus className="w-3 h-3 sm:w-4 sm:h-4" /> Novo Vídeo
           </button>
         </div>
       </div>
 
       {/* Filtros e Busca */}
-      <div className="bg-[#121215]/90 border border-zinc-800/80 rounded-2xl p-4 shadow-xl backdrop-blur-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="bg-[#121215]/90 border border-zinc-800/80 rounded-2xl p-3 sm:p-4 shadow-xl backdrop-blur-xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
         
         {/* Input de Pesquisa */}
         <div className="relative w-full sm:w-80">
@@ -363,7 +337,7 @@ export default function AdminVideosPage() {
       </div>
 
       {/* Grid de Vídeos do Catálogo */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
         {filteredVideos.map((v) => (
           <div key={v.id} className="bg-[#121215]/90 border border-zinc-800/80 hover:border-zinc-700/80 rounded-2xl overflow-hidden shadow-xl backdrop-blur-xl group transition-all duration-300 flex flex-col justify-between">
             <div>
@@ -373,6 +347,9 @@ export default function AdminVideosPage() {
                   <img 
                     src={v.thumbnail_url} 
                     alt={v.title}
+                    onError={(e) => {
+                      e.currentTarget.src = "https://images.unsplash.com/photo-1542051812871-757500d5a228?q=80&w=800&auto=format&fit=crop";
+                    }}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                   />
                 ) : (
@@ -384,51 +361,51 @@ export default function AdminVideosPage() {
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80 pointer-events-none" />
                 
-                <div className="absolute bottom-3 left-3 right-3 flex justify-between items-end">
-                  <span className="bg-zinc-950/80 backdrop-blur-md text-zinc-300 border border-zinc-800 px-2 py-0.5 rounded text-[10px] font-bold">
+                <div className="absolute bottom-2 left-2 right-2 flex justify-between items-end">
+                  <span className="bg-zinc-950/80 backdrop-blur-md text-zinc-300 border border-zinc-800 px-1.5 py-0.5 rounded text-[8px] sm:text-[10px] font-bold line-clamp-1">
                     {v.category}
                   </span>
                 </div>
               </div>
 
               {/* Detalhes do Vídeo */}
-              <div className="p-5 space-y-3">
-                <h3 className="text-white font-bold text-base group-hover:text-red-400 transition-colors leading-snug">
+              <div className="p-3 sm:p-5 space-y-2 sm:space-y-3">
+                <h3 className="text-white font-bold text-xs sm:text-base group-hover:text-red-400 transition-colors leading-snug line-clamp-2">
                   {v.title}
                 </h3>
-                <p className="text-zinc-400 text-xs line-clamp-2">{v.description || "Sem descrição informada."}</p>
+                <p className="text-zinc-400 text-[10px] sm:text-xs line-clamp-2 leading-tight">{v.description || "Sem descrição informada."}</p>
                 
                 {/* Preços (Compra e Aluguer) */}
-                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-zinc-800/60 text-xs">
-                  <div className="bg-zinc-900/60 p-2 rounded-xl border border-zinc-800">
-                    <span className="text-[10px] text-zinc-400 uppercase font-semibold block">Compra (Definitiva)</span>
-                    <span className="text-emerald-400 font-extrabold text-sm">MT {v.price}</span>
+                <div className="flex flex-col gap-1.5 pt-2 border-t border-zinc-800/60">
+                  <div className="bg-zinc-900/60 px-2 py-1.5 sm:p-2 rounded-lg border border-zinc-800 flex justify-between items-center">
+                    <span className="text-[8px] sm:text-[10px] text-zinc-400 uppercase font-semibold">Compra</span>
+                    <span className="text-emerald-400 font-extrabold text-[10px] sm:text-sm">MT {v.price}</span>
                   </div>
-                  <div className="bg-zinc-900/60 p-2 rounded-xl border border-zinc-800">
-                    <span className="text-[10px] text-zinc-400 uppercase font-semibold block">Aluguer (24h)</span>
-                    <span className="text-amber-400 font-extrabold text-sm">MT {v.rental_price}</span>
+                  <div className="bg-zinc-900/60 px-2 py-1.5 sm:p-2 rounded-lg border border-zinc-800 flex justify-between items-center">
+                    <span className="text-[8px] sm:text-[10px] text-zinc-400 uppercase font-semibold">Aluguer</span>
+                    <span className="text-amber-400 font-extrabold text-[10px] sm:text-sm">MT {v.rental_price}</span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Ações do Vídeo */}
-            <div className="p-4 bg-zinc-900/40 border-t border-zinc-800/60 flex items-center justify-between">
-              <span className="text-[11px] text-zinc-500 font-medium">Publicado em {v.created_at}</span>
-              <div className="flex items-center gap-2">
+            <div className="p-2 sm:p-4 bg-zinc-900/40 border-t border-zinc-800/60 flex items-center justify-between">
+              <span className="text-[9px] sm:text-[11px] text-zinc-500 font-medium hidden xs:block line-clamp-1">{v.created_at}</span>
+              <div className="flex items-center gap-1.5 ml-auto">
                 <button 
                   onClick={() => alert(`A editar vídeo: ${v.title}`)}
-                  className="p-2 text-zinc-400 hover:text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl border border-zinc-800 transition-colors"
+                  className="p-1.5 sm:p-2 text-zinc-400 hover:text-white bg-zinc-900 hover:bg-zinc-800 rounded-lg sm:rounded-xl border border-zinc-800 transition-colors"
                   title="Editar Vídeo"
                 >
-                  <Edit2 className="w-3.5 h-3.5" />
+                  <Edit2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 </button>
                 <button 
                   onClick={() => handleDeleteVideo(v.id)}
-                  className="p-2 text-red-400 hover:text-white bg-red-500/10 hover:bg-red-600 rounded-xl border border-red-500/20 transition-all"
+                  className="p-1.5 sm:p-2 text-red-400 hover:text-white bg-red-500/10 hover:bg-red-600 rounded-lg sm:rounded-xl border border-red-500/20 transition-all"
                   title="Eliminar Vídeo"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 </button>
               </div>
             </div>
@@ -438,180 +415,169 @@ export default function AdminVideosPage() {
       </div>
       </div>
 
-      {/* Modal de Publicar Novo Vídeo +18 (Melhorado) */}
+      {/* Modal de Publicar Novo Vídeo +18 (Redesenhado para Mobile) */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
-          <div className="bg-[#121215] border border-zinc-800 w-full max-w-2xl rounded-3xl p-6 sm:p-8 shadow-2xl relative space-y-6 my-8">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/90 backdrop-blur-sm animate-fade-in">
+          <div className="bg-[#121215] border border-zinc-800 w-full max-w-2xl rounded-2xl sm:rounded-3xl flex flex-col max-h-[95vh] sm:max-h-[90vh] shadow-2xl relative">
             
-            {/* Header do Modal */}
-            <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500">
-                  <Film className="w-5 h-5" />
+            {/* Header Fixo do Modal */}
+            <div className="flex-shrink-0 flex items-center justify-between p-3 sm:p-6 border-b border-zinc-800/80">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500">
+                  <Film className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-white tracking-tight">Publicar Novo Vídeo +18</h3>
-                  <p className="text-xs text-zinc-400">Preencha os detalhes, carregue a capa e configure os preços.</p>
+                  <h3 className="text-sm sm:text-lg font-black text-white tracking-tight">Publicar Novo Vídeo</h3>
+                  <p className="text-[10px] sm:text-xs text-zinc-400">Preencha os detalhes e carregue.</p>
                 </div>
               </div>
               
               <button 
                 onClick={() => { setIsModalOpen(false); resetForm(); }}
-                className="p-2 text-zinc-400 hover:text-white bg-zinc-900 rounded-full border border-zinc-800 transition-colors"
+                className="p-1.5 sm:p-2 text-zinc-400 hover:text-white bg-zinc-900 rounded-full border border-zinc-800 transition-colors"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveVideo} className="space-y-6">
-              
-              {/* Título & Categoria */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="sm:col-span-2 space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-300">Título do Vídeo +18 *</label>
-                  <input 
-                    type="text"
-                    required
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Ex: Cena Exclusiva VIP Vol. 05"
-                    className="w-full bg-zinc-900 border border-zinc-800 text-white text-xs rounded-xl px-4 py-3 focus:outline-none focus:border-red-500 transition-colors font-medium placeholder:text-zinc-600"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-300">Categoria *</label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-800 text-white text-xs rounded-xl px-3 py-3 outline-none focus:border-red-500 font-medium"
-                  >
-                    <option value="Exclusivos VIP">Exclusivos VIP</option>
-                    <option value="Cenas Completas HD">Cenas Completas HD</option>
-                    <option value="Lançamentos">Lançamentos</option>
-                    <option value="Populares & Virais">Populares & Virais</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Descrição / Legenda */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-zinc-300">Legenda do Vídeo</label>
-                <textarea 
-                  rows={2}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Escreva a legenda ou descrição do vídeo..."
-                  className="w-full bg-zinc-900 border border-zinc-800 text-white text-xs rounded-xl p-3 focus:outline-none focus:border-red-500 transition-colors placeholder:text-zinc-600 resize-none"
-                />
-              </div>
-
-              {/* Preços (Compra e Aluguer) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-zinc-900/60 p-4 rounded-2xl border border-zinc-800">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-emerald-400">Preço Compra Definitiva (MT)</label>
-                  <input 
-                    type="number"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    placeholder="500"
-                    className="w-full bg-zinc-900 border border-zinc-800 text-white text-xs rounded-xl px-3 py-2.5 font-bold focus:outline-none focus:border-emerald-500"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-amber-400">Preço Aluguer 24h (MT)</label>
-                  <input 
-                    type="number"
-                    value={rentalPrice}
-                    onChange={(e) => setRentalPrice(e.target.value)}
-                    placeholder="150"
-                    className="w-full bg-zinc-900 border border-zinc-800 text-white text-xs rounded-xl px-3 py-2.5 font-bold focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-              </div>
-
-              {/* Uploads (Ficheiro de Vídeo) */}
-              <div className="grid grid-cols-1 gap-4">
-
-                {/* Upload do Arquivo de Vídeo */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-                    <Film className="w-3.5 h-3.5 text-red-400" /> Ficheiro de Vídeo MP4 *
-                  </label>
-                  <div 
-                    onClick={() => videoInputRef.current?.click()}
-                    className="border-2 border-dashed border-zinc-800 hover:border-red-500/50 bg-zinc-900/60 rounded-2xl p-4 text-center cursor-pointer transition-all h-36 flex flex-col items-center justify-center relative group"
-                  >
-                    {videoFile ? (
-                      <div className="space-y-1 text-center">
-                        <CheckCircle2 className="w-7 h-7 text-emerald-400 mx-auto" />
-                        <p className="text-xs text-white font-bold truncate max-w-[200px]">{videoFile.name}</p>
-                        <p className="text-[10px] text-zinc-500">{(videoFile.size / (1024 * 1024)).toFixed(1)} MB</p>
-                      </div>
-                    ) : (
-                      <>
-                        <UploadCloud className="w-7 h-7 text-zinc-500 mb-1 group-hover:scale-110 transition-transform" />
-                        <span className="text-xs text-zinc-400 font-medium">Carregar Vídeo</span>
-                        <span className="text-[10px] text-zinc-600">.mp4 ou .mov</span>
-                      </>
-                    )}
+            {/* Conteúdo Rolável do Formulário */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar">
+              <form id="publish-video-form" onSubmit={handleSaveVideo} className="space-y-5 sm:space-y-6">
+                
+                {/* Título & Categoria */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
+                  <div className="sm:col-span-2 space-y-1.5">
+                    <label className="text-[11px] sm:text-xs font-bold text-zinc-300">Título do Vídeo *</label>
                     <input 
-                      type="file" 
-                      ref={videoInputRef} 
-                      onChange={handleVideoChange} 
-                      accept="video/*" 
-                      className="hidden" 
+                      type="text"
+                      required
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="Ex: Cena Exclusiva VIP Vol. 05"
+                      className="w-full bg-zinc-900/80 border border-zinc-700/80 text-white text-xs sm:text-sm rounded-lg px-3 py-2 sm:px-4 sm:py-3 focus:outline-none focus:border-red-500 transition-colors placeholder:text-zinc-600 shadow-inner"
                     />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] sm:text-xs font-bold text-zinc-300">Categoria *</label>
+                    <div className="relative">
+                      <select
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        className="w-full bg-zinc-900/80 border border-zinc-700/80 text-white text-xs sm:text-sm rounded-lg px-3 py-2 sm:px-4 sm:py-3 outline-none focus:border-red-500 appearance-none shadow-inner"
+                      >
+                        <option value="Exclusivos VIP">Exclusivos VIP</option>
+                        <option value="Cenas Completas HD">Cenas Completas HD</option>
+                        <option value="Lançamentos">Lançamentos</option>
+                        <option value="Populares & Virais">Populares & Virais</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
 
-                {/* Extrator de Capa (Visível apenas se houver vídeo) */}
-                {videoPreviewUrl && (
-                  <div className="space-y-3 bg-zinc-900/40 p-4 rounded-2xl border border-zinc-800 animate-fade-in">
-                    <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-                      <ImageIcon className="w-3.5 h-3.5 text-red-400" /> Capa do Vídeo (Thumbnail)
-                    </label>
-                    <p className="text-[10px] text-zinc-500">
-                      Reproduza o vídeo até à cena desejada e clique em "Capturar Cena Atual", ou carregue uma imagem do seu telemóvel.
-                    </p>
-                    
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      {/* Video Player para captura */}
-                      <div className="flex-1 space-y-2">
-                        <video 
-                          ref={captureVideoRef}
-                          src={videoPreviewUrl} 
-                          controls
-                          crossOrigin="anonymous"
-                          className="w-full aspect-video bg-black rounded-xl object-contain border border-zinc-800"
-                        />
-                        <button 
-                          type="button"
-                          onClick={captureFrame}
-                          className="w-full bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold py-2 rounded-xl transition-colors"
-                        >
-                          Capturar Cena Atual
-                        </button>
-                      </div>
+                {/* Descrição / Legenda */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] sm:text-xs font-bold text-zinc-300">Legenda / Descrição</label>
+                  <textarea 
+                    rows={2}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Escreva a legenda ou descrição do vídeo..."
+                    className="w-full bg-zinc-900/80 border border-zinc-700/80 text-white text-xs sm:text-sm rounded-lg p-3 sm:p-4 focus:outline-none focus:border-red-500 transition-colors placeholder:text-zinc-600 resize-none shadow-inner"
+                  />
+                </div>
 
-                      {/* Preview da Capa Selecionada */}
-                      <div className="flex-1 space-y-2">
-                        <div className="w-full aspect-video bg-zinc-950 rounded-xl border border-zinc-800 flex items-center justify-center overflow-hidden relative">
-                           {thumbnailPreviewUrl ? (
-                             <img src={thumbnailPreviewUrl} alt="Thumbnail Preview" className="w-full h-full object-cover" />
-                           ) : (
-                             <span className="text-xs text-zinc-600 font-medium">Nenhuma capa definida</span>
-                           )}
-                           <canvas ref={captureCanvasRef} className="hidden" />
+                {/* Preços (Compra e Aluguer) - Ocultos na Versão V1 Gratuita */}
+                <div className="hidden">
+                  <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
+                  <input type="number" value={rentalPrice} onChange={(e) => setRentalPrice(e.target.value)} />
+                </div>
+
+                {/* Uploads (Ficheiro de Vídeo) */}
+                <div className="space-y-3 sm:space-y-5 pt-2 border-t border-zinc-800/80">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] sm:text-xs font-bold text-zinc-300 flex items-center gap-1.5">
+                      <Film className="w-3.5 h-3.5 text-red-500" /> Ficheiro de Vídeo (MP4) *
+                    </label>
+                    <div 
+                      onClick={() => videoInputRef.current?.click()}
+                      className="border-2 border-dashed border-zinc-700 hover:border-red-500 bg-zinc-900/40 rounded-xl p-4 sm:p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center relative group min-h-[90px] sm:min-h-[120px]"
+                    >
+                      {videoFile ? (
+                        <div className="space-y-1 sm:space-y-2 text-center animate-fade-in">
+                          <CheckCircle2 className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-500 mx-auto" />
+                          <p className="text-xs sm:text-sm text-white font-bold truncate max-w-[200px] sm:max-w-[250px]">{videoFile.name}</p>
+                          <p className="text-[10px] sm:text-xs text-emerald-400/80 font-medium">{(videoFile.size / (1024 * 1024)).toFixed(1)} MB</p>
                         </div>
-                        <div className="flex gap-2">
+                      ) : (
+                        <div className="space-y-1.5 flex flex-col items-center">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-zinc-800 rounded-full flex items-center justify-center mb-1 group-hover:bg-red-500/20 transition-colors">
+                            <UploadCloud className="w-5 h-5 sm:w-6 sm:h-6 text-zinc-400 group-hover:text-red-500 transition-colors" />
+                          </div>
+                          <span className="text-xs sm:text-sm text-zinc-300 font-bold">Toque para selecionar vídeo</span>
+                          <span className="text-[10px] sm:text-xs text-zinc-500">Apenas formatos .mp4 ou .mov</span>
+                        </div>
+                      )}
+                      <input 
+                        type="file" 
+                        ref={videoInputRef} 
+                        onChange={handleVideoChange} 
+                        accept="video/*" 
+                        className="hidden" 
+                      />
+                    </div>
+                  </div>
+
+                  {/* Extrator de Capa (Visível apenas se houver vídeo) */}
+                  {videoPreviewUrl && (
+                    <div className="space-y-2 sm:space-y-4 bg-zinc-900/60 p-3 sm:p-5 rounded-xl border border-zinc-800/80 animate-fade-in">
+                      <div>
+                        <label className="text-[11px] sm:text-xs font-bold text-zinc-300 flex items-center gap-1.5 mb-1">
+                          <ImageIcon className="w-3.5 h-3.5 text-red-500" /> Capa do Vídeo (Thumbnail)
+                        </label>
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-5">
+                        {/* Video Player para captura */}
+                        <div className="flex-1 space-y-2">
+                          <div className="w-full aspect-video bg-black rounded-lg overflow-hidden border border-zinc-700 shadow-sm relative">
+                            <video 
+                              ref={captureVideoRef}
+                              src={videoPreviewUrl} 
+                              controls
+                              controlsList="nodownload"
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                          <button 
+                            type="button"
+                            onClick={captureFrame}
+                            className="w-full bg-zinc-800 hover:bg-zinc-700 text-white text-[11px] sm:text-xs font-bold py-2 sm:py-3 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-1.5"
+                          >
+                            <ImageIcon className="w-3.5 h-3.5" /> Capturar Cena
+                          </button>
+                        </div>
+
+                        {/* Preview da Capa Selecionada */}
+                        <div className="flex-1 space-y-2">
+                          <div className="w-full aspect-video bg-zinc-950 rounded-lg border border-zinc-700 flex items-center justify-center overflow-hidden relative shadow-sm">
+                             {thumbnailPreviewUrl ? (
+                               <img src={thumbnailPreviewUrl} alt="Thumbnail Preview" className="w-full h-full object-cover animate-fade-in" />
+                             ) : (
+                               <div className="flex flex-col items-center opacity-50">
+                                 <ImageIcon className="w-6 h-6 text-zinc-600 mb-1" />
+                                 <span className="text-[9px] sm:text-[10px] text-zinc-500 font-medium uppercase tracking-wider">Sem capa definida</span>
+                               </div>
+                             )}
+                             <canvas ref={captureCanvasRef} className="hidden" />
+                          </div>
+                          
                           <button 
                             type="button"
                             onClick={() => thumbInputRef.current?.click()}
-                            className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white text-[11px] font-semibold py-2 rounded-xl transition-colors text-center border border-zinc-700"
+                            className="w-full bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-[11px] sm:text-xs font-bold py-2 sm:py-3 rounded-lg transition-colors text-center border border-zinc-700 flex items-center justify-center gap-1.5"
                           >
-                            Carregar do Telemóvel
+                            <UploadCloud className="w-3.5 h-3.5" /> Enviar da Galeria
                           </button>
                           <input 
                             type="file"
@@ -623,44 +589,44 @@ export default function AdminVideosPage() {
                         </div>
                       </div>
                     </div>
+                  )}
+                </div>
+
+                {/* Barra de Progresso Real se estiver fazendo Upload */}
+                {isUploading && (
+                  <div className="space-y-2 bg-zinc-900/90 p-4 rounded-xl border border-zinc-700 animate-fade-in">
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-white flex items-center gap-2">
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin text-red-500" /> Enviando vídeo...
+                      </span>
+                      <span className="text-red-400">{uploadProgress}%</span>
+                    </div>
+                    <div className="w-full bg-zinc-800 h-2 rounded-full overflow-hidden">
+                      <div className="bg-gradient-to-r from-red-600 to-red-500 h-full rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                    </div>
                   </div>
                 )}
-              </div>
+              </form>
+            </div>
 
-              {/* Barra de Progresso Real se estiver fazendo Upload */}
-              {isUploading && (
-                <div className="space-y-2 bg-zinc-900/90 p-4 rounded-2xl border border-zinc-800 animate-fade-in">
-                  <div className="flex justify-between text-xs font-bold">
-                    <span className="text-white flex items-center gap-2">
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-red-500" /> Enviando vídeo para o servidor...
-                    </span>
-                    <span className="text-red-400">{uploadProgress}%</span>
-                  </div>
-                  <div className="w-full bg-zinc-800 h-2 rounded-full overflow-hidden">
-                    <div className="bg-gradient-to-r from-red-600 to-red-500 h-full rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
-                  </div>
-                </div>
-              )}
-
-              {/* Botões do Modal */}
-              <div className="flex items-center justify-end gap-3 pt-2">
-                <button 
-                  type="button"
-                  onClick={() => { setIsModalOpen(false); resetForm(); }}
-                  className="bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white font-semibold px-4 py-3 rounded-xl text-xs transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button 
-                  type="submit"
-                  disabled={isUploading}
-                  className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-bold px-6 py-3 rounded-xl text-xs transition-all shadow-[0_0_20px_rgba(220,38,38,0.3)] disabled:opacity-50"
-                >
-                  {isUploading ? "A publicar..." : "Salvar e Publicar Vídeo"}
-                </button>
-              </div>
-
-            </form>
+            {/* Rodapé Fixo (Botões) */}
+            <div className="flex-shrink-0 p-3 sm:p-6 border-t border-zinc-800/80 bg-[#121215] flex flex-row items-center justify-end gap-3 sm:gap-3 rounded-b-2xl sm:rounded-b-3xl">
+              <button 
+                type="button"
+                onClick={() => { setIsModalOpen(false); resetForm(); }}
+                className="w-full sm:w-auto bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-bold px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-[11px] sm:text-sm transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                type="submit"
+                form="publish-video-form"
+                disabled={isUploading}
+                className="w-full sm:w-auto bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-black px-4 sm:px-8 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-[11px] sm:text-sm transition-all shadow-[0_4px_15px_rgba(220,38,38,0.3)] disabled:opacity-50"
+              >
+                {isUploading ? "A processar..." : "Publicar Vídeo"}
+              </button>
+            </div>
 
           </div>
         </div>

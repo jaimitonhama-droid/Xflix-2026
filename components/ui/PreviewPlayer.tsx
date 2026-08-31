@@ -118,7 +118,7 @@ export function PreviewPlayer({
       setProgress((current / total) * 100);
 
       // Check limit (only if not unlocked and not explicitly rented/active)
-      const hasAccess = isUnlocked || (expiresAt && !isExpired);
+      const hasAccess = true; // V1: isUnlocked || (expiresAt && !isExpired);
       if (!hasAccess && current >= limitSeconds && !limitReached) {
         videoRef.current.pause();
         setIsPlaying(false);
@@ -143,9 +143,10 @@ export function PreviewPlayer({
     const seekValue = parseFloat(e.target.value);
     const seekTime = (seekValue / 100) * duration;
     
-    if (seekTime > limitSeconds && !isUnlocked && !(expiresAt && !isExpired)) {
-       return; // Prevent seeking beyond limit if no access
-    }
+    // V1: Free Mode - allow seeking anywhere
+    // if (seekTime > limitSeconds && !isUnlocked && !(expiresAt && !isExpired)) {
+    //    return; // Prevent seeking beyond limit if no access
+    // }
     
     if (videoRef.current) {
       videoRef.current.currentTime = seekTime;
@@ -167,7 +168,7 @@ export function PreviewPlayer({
   return (
     <div 
       ref={containerRef}
-      className="relative w-full aspect-video bg-black rounded-none md:rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/5 group"
+      className="relative w-full bg-black rounded-none md:rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/5 group flex justify-center"
       onMouseMove={() => setIsHovering(true)}
       onMouseLeave={() => { if (isPlaying) setIsHovering(false); }}
     >
@@ -175,7 +176,7 @@ export function PreviewPlayer({
         ref={videoRef}
         src={src}
         poster={poster}
-        className="w-full h-full object-contain cursor-pointer"
+        className="w-full max-h-[85vh] object-contain cursor-pointer"
         onClick={togglePlay}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}

@@ -115,8 +115,8 @@ export default function AdminUsersPage() {
       {/* Cabeçalho */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-tight">Membros da Plataforma</h1>
-          <p className="text-xs sm:text-sm text-zinc-400 mt-1">Crescimento de utilizadores e clientes VIP.</p>
+          <h1 className="text-base sm:text-2xl font-black text-white tracking-tight leading-tight">Membros da Plataforma</h1>
+          <p className="text-[10px] sm:text-sm text-zinc-400 mt-0.5">Crescimento de utilizadores e clientes VIP.</p>
         </div>
         <button 
           onClick={fetchUsers}
@@ -136,61 +136,69 @@ export default function AdminUsersPage() {
       )}
 
       {/* 4 Cards de Métricas Principais (Valores Dinâmicos Reais) */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-5">
         
         {/* Total de Usuários */}
-        <div className="bg-[#121215]/90 border border-zinc-800/80 hover:border-red-500/30 rounded-2xl p-3.5 sm:p-5 shadow-lg relative overflow-hidden group transition-all duration-300 backdrop-blur-xl min-w-0">
-          <div className="flex items-center justify-between mb-3 gap-1">
-            <span className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider truncate flex-1">Membros</span>
-            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 shrink-0">
-              <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+        <div className="bg-[#121215]/90 border border-zinc-800/80 hover:border-red-500/30 rounded-xl sm:rounded-2xl p-2.5 sm:p-5 shadow-lg relative overflow-hidden group transition-all duration-300 backdrop-blur-xl min-w-0 flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-1 sm:mb-3 gap-1">
+            <span className="text-zinc-400 text-[9px] sm:text-xs font-semibold uppercase tracking-wider truncate flex-1">Membros</span>
+            <div className="w-5 h-5 sm:w-9 sm:h-9 rounded-md sm:rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 shrink-0">
+              <Users className="w-3 h-3 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight mb-2 sm:mb-3 truncate">{totalMembers}</h3>
-          <div className="hidden sm:inline-flex items-center gap-1.5 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-lg text-xs font-bold text-red-400">
-            <ArrowUpRight className="w-3.5 h-3.5" /> Registos
+          <div>
+            <h3 className="text-sm sm:text-2xl font-black text-white tracking-tight mb-1 sm:mb-3 truncate">{totalMembers}</h3>
+            <div className="hidden sm:inline-flex items-center gap-1.5 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-lg text-[9px] sm:text-xs font-bold text-red-400">
+              <ArrowUpRight className="w-3.5 h-3.5" /> Registos
+            </div>
           </div>
         </div>
 
         {/* Usuários Ativos */}
-        <div className="bg-[#121215]/90 border border-zinc-800/80 hover:border-emerald-500/30 rounded-2xl p-3.5 sm:p-5 shadow-lg relative overflow-hidden group transition-all duration-300 backdrop-blur-xl min-w-0">
-          <div className="flex items-center justify-between mb-3 gap-1">
-            <span className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider truncate flex-1">Ativos Hoje</span>
-            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
-              <UserCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+        <div className="bg-[#121215]/90 border border-zinc-800/80 hover:border-emerald-500/30 rounded-xl sm:rounded-2xl p-2.5 sm:p-5 shadow-lg relative overflow-hidden group transition-all duration-300 backdrop-blur-xl min-w-0 flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-1 sm:mb-3 gap-1">
+            <span className="text-zinc-400 text-[9px] sm:text-xs font-semibold uppercase tracking-wider truncate flex-1">Ativos</span>
+            <div className="w-5 h-5 sm:w-9 sm:h-9 rounded-md sm:rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+              <UserCheck className="w-3 h-3 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight mb-2 sm:mb-3 truncate">{totalMembers}</h3>
-          <div className="hidden sm:inline-flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg text-xs font-bold text-emerald-400">
-            <ArrowUpRight className="w-3.5 h-3.5" /> Conetados
+          <div>
+            <h3 className="text-sm sm:text-2xl font-black text-white tracking-tight mb-1 sm:mb-3 truncate">{totalMembers}</h3>
+            <div className="hidden sm:inline-flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg text-[9px] sm:text-xs font-bold text-emerald-400">
+              <ArrowUpRight className="w-3.5 h-3.5" /> Conetados
+            </div>
           </div>
         </div>
 
         {/* Clientes VIP Pagantes */}
-        <div className="bg-[#121215]/90 border border-zinc-800/80 hover:border-amber-500/30 rounded-2xl p-3.5 sm:p-5 shadow-lg relative overflow-hidden group transition-all duration-300 backdrop-blur-xl min-w-0">
-          <div className="flex items-center justify-between mb-3 gap-1">
-            <span className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider truncate flex-1">VIPs (Pago)</span>
-            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
-              <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+        <div className="bg-[#121215]/90 border border-zinc-800/80 hover:border-amber-500/30 rounded-xl sm:rounded-2xl p-2.5 sm:p-5 shadow-lg relative overflow-hidden group transition-all duration-300 backdrop-blur-xl min-w-0 flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-1 sm:mb-3 gap-1">
+            <span className="text-zinc-400 text-[9px] sm:text-xs font-semibold uppercase tracking-wider truncate flex-1">VIPs</span>
+            <div className="w-5 h-5 sm:w-9 sm:h-9 rounded-md sm:rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+              <ShieldCheck className="w-3 h-3 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight mb-2 sm:mb-3 truncate">{vipMembers} VIPs</h3>
-          <div className="hidden sm:inline-flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg text-xs font-bold text-amber-400">
-            <ArrowUpRight className="w-3.5 h-3.5" /> Confirmados
+          <div>
+            <h3 className="text-sm sm:text-2xl font-black text-white tracking-tight mb-1 sm:mb-3 truncate">{vipMembers} VIPs</h3>
+            <div className="hidden sm:inline-flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg text-[9px] sm:text-xs font-bold text-amber-400">
+              <ArrowUpRight className="w-3.5 h-3.5" /> Confirmados
+            </div>
           </div>
         </div>
 
         {/* Ticket Médio */}
-        <div className="bg-[#121215]/90 border border-zinc-800/80 hover:border-purple-500/30 rounded-2xl p-3.5 sm:p-5 shadow-lg relative overflow-hidden group transition-all duration-300 backdrop-blur-xl min-w-0">
-          <div className="flex items-center justify-between mb-3 gap-1">
-            <span className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider truncate flex-1">Ticket Médio</span>
-            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 shrink-0">
-              <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+        <div className="bg-[#121215]/90 border border-zinc-800/80 hover:border-purple-500/30 rounded-xl sm:rounded-2xl p-2.5 sm:p-5 shadow-lg relative overflow-hidden group transition-all duration-300 backdrop-blur-xl min-w-0 flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-1 sm:mb-3 gap-1">
+            <span className="text-zinc-400 text-[9px] sm:text-xs font-semibold uppercase tracking-wider truncate flex-1">Ticket M.</span>
+            <div className="w-5 h-5 sm:w-9 sm:h-9 rounded-md sm:rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 shrink-0">
+              <DollarSign className="w-3 h-3 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight mb-2 sm:mb-3 truncate">MT 0</h3>
-          <div className="hidden sm:inline-flex items-center gap-1.5 bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 rounded-lg text-xs font-bold text-purple-400">
-            <ArrowUpRight className="w-3.5 h-3.5" /> Média
+          <div>
+            <h3 className="text-sm sm:text-2xl font-black text-white tracking-tight mb-1 sm:mb-3 truncate">MT 0</h3>
+            <div className="hidden sm:inline-flex items-center gap-1.5 bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 rounded-lg text-[9px] sm:text-xs font-bold text-purple-400">
+              <ArrowUpRight className="w-3.5 h-3.5" /> Média
+            </div>
           </div>
         </div>
 
@@ -248,16 +256,16 @@ export default function AdminUsersPage() {
             <p className="text-xs text-zinc-500 font-medium mb-6">Prevalência de acesso via telemóvel</p>
             
             <div className="grid grid-cols-2 gap-3 mb-6">
-              <div className="bg-zinc-900/60 border border-zinc-800 p-3.5 rounded-xl">
-                <Smartphone className="w-5 h-5 text-red-500 mb-2" />
-                <h4 className="text-xl font-black text-white">0%</h4>
-                <p className="text-[10px] text-zinc-500 font-medium">Mobile (Celular)</p>
+              <div className="bg-zinc-900/60 border border-zinc-800 p-2.5 sm:p-3.5 rounded-xl">
+                <Smartphone className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 mb-1.5 sm:mb-2" />
+                <h4 className="text-base sm:text-xl font-black text-white">0%</h4>
+                <p className="text-[9px] sm:text-[10px] text-zinc-500 font-medium line-clamp-1">Mobile (Celular)</p>
               </div>
 
-              <div className="bg-zinc-900/60 border border-zinc-800 p-3.5 rounded-xl">
-                <ShieldCheck className="w-5 h-5 text-emerald-400 mb-2" />
-                <h4 className="text-xl font-black text-white">0%</h4>
-                <p className="text-[10px] text-zinc-500 font-medium">Clientes VIP</p>
+              <div className="bg-zinc-900/60 border border-zinc-800 p-2.5 sm:p-3.5 rounded-xl">
+                <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 mb-1.5 sm:mb-2" />
+                <h4 className="text-base sm:text-xl font-black text-white">0%</h4>
+                <p className="text-[9px] sm:text-[10px] text-zinc-500 font-medium line-clamp-1">Clientes VIP</p>
               </div>
             </div>
 
@@ -280,41 +288,41 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Lista de Membros */}
-      <div className="bg-[#121215]/90 border border-zinc-800/80 rounded-2xl p-6 shadow-xl backdrop-blur-xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="bg-[#121215]/90 border border-zinc-800/80 rounded-2xl p-3 sm:p-6 shadow-xl backdrop-blur-xl w-full max-w-full overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 sm:mb-6">
           <div>
-            <h2 className="text-white font-bold text-lg tracking-tight">Lista Completa de Membros</h2>
-            <p className="text-xs text-zinc-500 font-medium">Gerencie contas, acessos VIP e concessões de conteúdo</p>
+            <h2 className="text-white font-bold text-base sm:text-lg tracking-tight">Lista Completa de Membros</h2>
+            <p className="text-[10px] sm:text-xs text-zinc-500 font-medium">Gerencie contas, acessos VIP e concessões de conteúdo</p>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
             <div className="relative w-full sm:w-auto">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-zinc-500" />
               <input 
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Buscar utilizador..."
-                className="bg-zinc-900 border border-zinc-800 text-white text-xs rounded-xl pl-9 pr-3 py-2.5 sm:py-2 outline-none focus:border-red-500 w-full sm:w-64"
+                className="bg-zinc-900 border border-zinc-800 text-white text-[11px] sm:text-xs rounded-xl pl-9 pr-3 py-2 sm:py-2.5 outline-none focus:border-red-500 w-full sm:w-64"
               />
             </div>
 
-            <div className="grid grid-cols-3 sm:flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-xl p-1 text-xs w-full sm:w-auto">
+            <div className="grid grid-cols-3 sm:flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-xl p-1 text-[10px] sm:text-xs w-full sm:w-auto">
               <button 
                 onClick={() => setFilterStatus("all")}
-                className={`py-2 sm:py-1 rounded-lg font-bold transition-all text-center ${filterStatus === "all" ? "bg-red-600 text-white" : "text-zinc-400"}`}
+                className={`py-1.5 sm:py-1 rounded-lg font-bold transition-all text-center ${filterStatus === "all" ? "bg-red-600 text-white" : "text-zinc-400"}`}
               >
                 Todos
               </button>
               <button 
                 onClick={() => setFilterStatus("vip")}
-                className={`py-2 sm:py-1 rounded-lg font-bold transition-all text-center ${filterStatus === "vip" ? "bg-red-600 text-white" : "text-zinc-400"}`}
+                className={`py-1.5 sm:py-1 rounded-lg font-bold transition-all text-center ${filterStatus === "vip" ? "bg-red-600 text-white" : "text-zinc-400"}`}
               >
                 VIPs
               </button>
               <button 
                 onClick={() => setFilterStatus("free")}
-                className={`py-2 sm:py-1 rounded-lg font-bold transition-all text-center ${filterStatus === "free" ? "bg-red-600 text-white" : "text-zinc-400"}`}
+                className={`py-1.5 sm:py-1 rounded-lg font-bold transition-all text-center ${filterStatus === "free" ? "bg-red-600 text-white" : "text-zinc-400"}`}
               >
                 Grátis
               </button>
@@ -323,9 +331,9 @@ export default function AdminUsersPage() {
         </div>
 
         {/* Tabela de Usuários */}
-        <div className="overflow-x-auto pb-2">
-          <table className="w-full min-w-[700px] text-left text-xs">
-            <thead className="text-zinc-300 uppercase tracking-wider border-b border-zinc-700/80 font-bold text-xs">
+        <div className="w-full overflow-x-auto pb-2 custom-scrollbar">
+          <table className="w-full min-w-[650px] text-left text-[11px] sm:text-xs">
+            <thead className="text-zinc-300 uppercase tracking-wider border-b border-zinc-700/80 font-bold text-[9px] sm:text-xs">
               <tr>
                 <th className="pb-3.5 pt-1">Utilizador & E-mail</th>
                 <th className="pb-3.5 pt-1">Data de Registo</th>

@@ -41,31 +41,31 @@ export default function LoginPage() {
       <div className="absolute top-0 left-0 w-[350px] h-[350px] bg-zinc-800/10 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Top Header Bar */}
-      <header className="absolute top-0 left-0 right-0 p-6 flex items-center justify-between z-20 max-w-6xl mx-auto w-full">
+      <header className="absolute top-0 left-0 right-0 p-4 sm:p-6 flex items-center justify-between z-20 max-w-6xl mx-auto w-full">
         <Link href="/" className="flex items-center gap-1 group">
-          <span className="text-3xl font-black tracking-tighter text-red-600 group-hover:scale-105 transition-transform">X</span>
-          <span className="text-3xl font-black tracking-tighter text-white">FLIX</span>
+          <span className="text-2xl sm:text-3xl font-black tracking-tighter text-red-600 group-hover:scale-105 transition-transform">X</span>
+          <span className="text-2xl sm:text-3xl font-black tracking-tighter text-white">FLIX</span>
         </Link>
 
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-900/80 hover:bg-zinc-800/80 border border-zinc-800/80 px-4 py-2 rounded-full transition-all backdrop-blur-md"
+          className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-900/80 hover:bg-zinc-800/80 border border-zinc-800/80 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full transition-all backdrop-blur-md"
         >
-          <ArrowLeft className="w-4 h-4 text-red-500" />
-          Voltar ao Início
+          <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-500" />
+          <span className="hidden xs:inline">Voltar ao Início</span>
         </Link>
       </header>
 
       {/* Main Form Card */}
-      <div className="relative w-full max-w-[440px] z-10 my-16">
-        <div className="bg-[#121215]/95 border border-zinc-800/90 rounded-3xl p-8 sm:p-10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] backdrop-blur-2xl">
+      <div className="relative w-full max-w-[440px] z-10 my-12 sm:my-16 px-4 sm:px-0">
+        <div className="bg-[#121215]/95 border border-zinc-800/90 rounded-3xl p-6 sm:p-10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] backdrop-blur-2xl">
           
           {/* Mode Switcher Tabs */}
-          <div className="flex items-center p-1 bg-[#18181b] border border-zinc-800 rounded-2xl mb-8">
+          <div className="flex items-center p-1 bg-[#18181b] border border-zinc-800 rounded-2xl mb-6 sm:mb-8">
             <button
               type="button"
               onClick={() => setMode("register")}
-              className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+              className={`flex-1 py-2 sm:py-2.5 text-[11px] sm:text-xs font-bold rounded-xl transition-all cursor-pointer ${
                 mode === "register"
                   ? "bg-red-600 text-white shadow-md"
                   : "text-zinc-400 hover:text-white"
@@ -76,7 +76,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setMode("login")}
-              className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+              className={`flex-1 py-2 sm:py-2.5 text-[11px] sm:text-xs font-bold rounded-xl transition-all cursor-pointer ${
                 mode === "login"
                   ? "bg-red-600 text-white shadow-md"
                   : "text-zinc-400 hover:text-white"
@@ -87,10 +87,10 @@ export default function LoginPage() {
           </div>
 
           <div className="mb-6 text-center">
-            <h1 className="text-2xl font-extrabold text-white tracking-tight mb-1">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight mb-1.5">
               {mode === "register" ? "Crie sua Conta Xflix" : "Bem-vindo de volta"}
             </h1>
-            <p className="text-xs text-zinc-400 font-medium">
+            <p className="text-[11px] sm:text-xs text-zinc-400 font-medium leading-relaxed">
               {mode === "register"
                 ? "Preencha os dados abaixo para ter acesso ilimitado"
                 : "Entre com seus dados para continuar"}
@@ -130,10 +130,10 @@ export default function LoginPage() {
                 </div>
               )}
 
-              <div className="space-y-3.5">
+              <div className="space-y-4">
                 {/* Campo NOME */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-300 block ml-1" htmlFor="xflix-reg-fullname">
+                <div className="space-y-1.5">
+                  <label className="text-xs sm:text-sm font-medium text-zinc-300 block ml-1" htmlFor="xflix-reg-fullname">
                     Nome Completo
                   </label>
                   <div className="relative">
@@ -146,14 +146,14 @@ export default function LoginPage() {
                       autoComplete="off"
                       placeholder="Seu nome completo"
                       required
-                      className="block w-full h-12 pl-5 pr-4 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
+                      className="block w-full h-11 sm:h-12 pl-4 sm:pl-5 pr-4 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-xs sm:text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
                     />
                   </div>
                 </div>
 
                 {/* Campo GMAIL / E-MAIL */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-300 block ml-1" htmlFor="xflix-reg-emailaddr">
+                <div className="space-y-1.5">
+                  <label className="text-xs sm:text-sm font-medium text-zinc-300 block ml-1" htmlFor="xflix-reg-emailaddr">
                     Gmail / Endereço de E-mail
                   </label>
                   <div className="relative">
@@ -166,14 +166,14 @@ export default function LoginPage() {
                       autoComplete="off"
                       placeholder="seu.email@gmail.com"
                       required
-                      className="block w-full h-12 pl-5 pr-4 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
+                      className="block w-full h-11 sm:h-12 pl-4 sm:pl-5 pr-4 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-xs sm:text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
                     />
                   </div>
                 </div>
 
                 {/* Campo SENHA */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-300 block ml-1" htmlFor="xflix-reg-newpass">
+                <div className="space-y-1.5">
+                  <label className="text-xs sm:text-sm font-medium text-zinc-300 block ml-1" htmlFor="xflix-reg-newpass">
                     Senha
                   </label>
                   <div className="relative">
@@ -187,7 +187,7 @@ export default function LoginPage() {
                       placeholder="••••••••"
                       required
                       minLength={6}
-                      className="block w-full h-12 pl-5 pr-11 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
+                      className="block w-full h-11 sm:h-12 pl-4 sm:pl-5 pr-11 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-xs sm:text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
                     />
                     <button
                       type="button"
@@ -201,8 +201,8 @@ export default function LoginPage() {
                 </div>
 
                 {/* Campo CONFIRMAR SENHA */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-300 block ml-1" htmlFor="xflix-reg-confpass">
+                <div className="space-y-1.5">
+                  <label className="text-xs sm:text-sm font-medium text-zinc-300 block ml-1" htmlFor="xflix-reg-confpass">
                     Confirmar Senha
                   </label>
                   <div className="relative">
@@ -216,7 +216,7 @@ export default function LoginPage() {
                       placeholder="Repita a senha"
                       required
                       minLength={6}
-                      className={`block w-full h-12 pl-5 pr-11 border rounded-2xl bg-[#18181b]/90 text-white text-sm placeholder-zinc-500 focus:outline-none font-medium transition-all ${
+                      className={`block w-full h-11 sm:h-12 pl-4 sm:pl-5 pr-11 border rounded-2xl bg-[#18181b]/90 text-white text-xs sm:text-sm placeholder-zinc-500 focus:outline-none font-medium transition-all ${
                         isPasswordMismatch
                           ? "border-red-600 focus:border-red-600 focus:ring-2 focus:ring-red-600/30"
                           : "border-zinc-800/90 focus:border-red-600 focus:ring-2 focus:ring-red-600/30"
@@ -232,7 +232,7 @@ export default function LoginPage() {
                     </button>
                   </div>
                   {isPasswordMismatch && (
-                    <p className="text-[11px] text-red-400 mt-1 ml-1 font-semibold">
+                    <p className="text-[11px] text-red-400 mt-1.5 ml-1 font-semibold">
                       As senhas não coincidem
                     </p>
                   )}
@@ -260,7 +260,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isRegisterPending || isPasswordMismatch}
-                className="w-full flex justify-center items-center h-12 px-4 rounded-2xl text-xs font-bold text-white bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-500 hover:to-red-600 transition-all shadow-[0_0_30px_rgba(220,38,38,0.35)] disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] mt-6 cursor-pointer"
+                className="w-full flex justify-center items-center h-11 sm:h-12 px-4 rounded-2xl text-[11px] sm:text-xs font-bold text-white bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-500 hover:to-red-600 transition-all shadow-[0_0_30px_rgba(220,38,38,0.35)] disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] mt-6 cursor-pointer"
               >
                 {isRegisterPending ? (
                   <>
@@ -301,10 +301,10 @@ export default function LoginPage() {
                 </div>
               )}
 
-              <div className="space-y-3.5">
+              <div className="space-y-4">
                 {/* Campo E-MAIL */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-300 block ml-1" htmlFor="xflix-login-emailaddr">
+                <div className="space-y-1.5">
+                  <label className="text-xs sm:text-sm font-medium text-zinc-300 block ml-1" htmlFor="xflix-login-emailaddr">
                     Gmail / Endereço de E-mail
                   </label>
                   <div className="relative">
@@ -317,18 +317,18 @@ export default function LoginPage() {
                       autoComplete="off"
                       placeholder="seu.email@gmail.com"
                       required
-                      className="block w-full h-12 pl-5 pr-4 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
+                      className="block w-full h-11 sm:h-12 pl-4 sm:pl-5 pr-4 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-xs sm:text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
                     />
                   </div>
                 </div>
 
                 {/* Campo SENHA */}
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <div className="flex items-center justify-between ml-0.5">
-                    <label className="text-xs font-semibold text-zinc-300" htmlFor="xflix-login-curpass">
+                    <label className="text-[11px] sm:text-xs font-semibold text-zinc-300" htmlFor="xflix-login-curpass">
                       Senha
                     </label>
-                    <Link href="#" className="text-xs font-medium text-red-500 hover:text-red-400 transition-colors">
+                    <Link href="#" className="text-[10px] sm:text-[11px] font-medium text-red-500 hover:text-red-400 transition-colors">
                       Esqueceu a senha?
                     </Link>
                   </div>
@@ -342,7 +342,7 @@ export default function LoginPage() {
                       autoComplete="current-password"
                       placeholder="••••••••"
                       required
-                      className="block w-full h-12 pl-5 pr-11 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
+                      className="block w-full h-11 sm:h-12 pl-4 sm:pl-5 pr-11 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-xs sm:text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
                     />
                     <button
                       type="button"
@@ -359,7 +359,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoginPending}
-                className="w-full flex justify-center items-center h-12 px-4 rounded-2xl text-xs font-bold text-white bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-500 hover:to-red-600 transition-all shadow-[0_0_30px_rgba(220,38,38,0.35)] disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] mt-6 cursor-pointer"
+                className="w-full flex justify-center items-center h-11 sm:h-12 px-4 rounded-2xl text-[11px] sm:text-xs font-bold text-white bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-500 hover:to-red-600 transition-all shadow-[0_0_30px_rgba(220,38,38,0.35)] disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] mt-6 cursor-pointer"
               >
                 {isLoginPending ? (
                   <>

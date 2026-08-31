@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Play, Sparkles, Lock, Flame, ShieldCheck, Tag, RefreshCw } from "lucide-react";
+import { Play, Sparkles, Lock, Flame, ShieldCheck, Tag, RefreshCw, Film } from "lucide-react";
 import { VideoCard } from "@/components/ui/VideoCard";
 
 import { createClient } from "@/services/supabase/client";
@@ -124,53 +124,44 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* Paginação */}
-        <div className="pt-10 pb-6 flex justify-center w-full overflow-hidden">
-          <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2 max-w-full">
-            <button 
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-              className="flex items-center justify-center h-8 sm:h-10 px-2 sm:px-3 bg-zinc-900 border border-zinc-800 rounded text-xs sm:text-sm text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Ant.
-            </button>
-            
-            {[1, 2, 3].map((page) => (
-              <button 
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`flex items-center justify-center w-8 sm:w-10 h-8 sm:h-10 rounded text-xs sm:text-sm font-bold transition-colors ${
-                  page === currentPage 
-                    ? "bg-red-600 text-white border border-red-600" 
-                    : "bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white"
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-
-            <span className="flex items-center justify-center w-6 sm:w-8 h-8 sm:h-10 text-zinc-500 text-xs sm:text-sm">...</span>
-            
-            <button 
-              onClick={() => setCurrentPage(42)}
-              className={`flex items-center justify-center w-8 sm:w-10 h-8 sm:h-10 rounded text-xs sm:text-sm font-bold transition-colors ${
-                  currentPage === 42 
-                    ? "bg-red-600 text-white border border-red-600" 
-                    : "bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white"
-                }`}
-            >
-              42
-            </button>
-
-            <button 
-              onClick={() => setCurrentPage(prev => Math.min(42, prev + 1))}
-              disabled={currentPage === 42}
-              className="flex items-center justify-center h-8 sm:h-10 px-2 sm:px-3 bg-zinc-900 border border-zinc-800 rounded text-xs sm:text-sm text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Próx.
-            </button>
+        {/* Empty State */}
+        {!isLoading && filteredVideos.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+            <div className="w-16 h-16 bg-zinc-900 rounded-full flex items-center justify-center">
+              <Film className="w-8 h-8 text-zinc-600" />
+            </div>
+            <h3 className="text-xl font-bold text-white">Nenhum vídeo encontrado</h3>
+            <p className="text-zinc-500 max-w-md">Você ainda não tem vídeos reais publicados no banco de dados. Os vídeos de exemplo foram removidos.</p>
           </div>
-        </div>
+        )}
+
+        {/* Paginação */}
+        {!isLoading && filteredVideos.length > 0 && (
+          <div className="pt-10 pb-6 flex justify-center w-full overflow-hidden">
+            <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2 max-w-full">
+              <button 
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="flex items-center justify-center h-8 sm:h-10 px-2 sm:px-3 bg-zinc-900 border border-zinc-800 rounded text-xs sm:text-sm text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Ant.
+              </button>
+              
+              <button 
+                className="flex items-center justify-center w-8 sm:w-10 h-8 sm:h-10 rounded text-xs sm:text-sm font-bold transition-colors bg-red-600 text-white border border-red-600"
+              >
+                1
+              </button>
+
+              <button 
+                disabled
+                className="flex items-center justify-center h-8 sm:h-10 px-2 sm:px-3 bg-zinc-900 border border-zinc-800 rounded text-xs sm:text-sm text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Próx.
+              </button>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>

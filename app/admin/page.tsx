@@ -149,10 +149,10 @@ export default function AdminDashboardPage() {
       
       {/* Saudação do Painel */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight flex items-center gap-2">
+        <h1 className="text-xl sm:text-3xl font-black text-white tracking-tight leading-tight flex items-center gap-2">
           Bem-vindo Criador
         </h1>
-        <p className="text-sm text-zinc-400 font-normal mt-1">Aqui está a visão geral das métricas e receita do Xflix hoje.</p>
+        <p className="text-xs sm:text-sm text-zinc-400 font-normal mt-1">Aqui está a visão geral das métricas e receita do Xflix hoje.</p>
       </div>
 
       {/* Barra de Ações Rápidas (Quick Actions) */}
@@ -204,61 +204,69 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* 4 Cards de Métricas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         
         {/* Receita Total Acumulada */}
-        <div className="bg-zinc-900/40 border border-white/5 hover:border-emerald-500/30 hover:-translate-y-0.5 hover:shadow-2xl rounded-xl p-4 relative overflow-hidden group transition-all duration-300 backdrop-blur-xl">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest">Receita Total</span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.1)] group-hover:shadow-[0_0_25px_rgba(16,185,129,0.2)] transition-all">
-              <DollarSign className="w-4 h-4" />
+        <div className="bg-zinc-900/40 border border-white/5 hover:border-emerald-500/30 hover:-translate-y-0.5 hover:shadow-2xl rounded-xl p-3 sm:p-4 relative overflow-hidden group transition-all duration-300 backdrop-blur-xl flex flex-col justify-between">
+          <div className="flex items-start justify-between mb-2 sm:mb-3 gap-1">
+            <span className="text-zinc-400 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest leading-tight">Receita Total</span>
+            <div className="w-6 h-6 sm:w-8 sm:h-8 shrink-0 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.1)] group-hover:shadow-[0_0_25px_rgba(16,185,129,0.2)] transition-all">
+              <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <h3 className="text-2xl font-black text-white tracking-tighter mb-3">MT {totalRevenue.toLocaleString()}</h3>
-          <div className="inline-flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded text-[9px] font-bold text-emerald-400 uppercase tracking-wider">
-            <CheckCircle2 className="w-3 h-3" /> Todo o Tempo
+          <div>
+            <h3 className="text-base sm:text-2xl font-black text-white tracking-tighter mb-2 sm:mb-3 truncate">MT {totalRevenue.toLocaleString()}</h3>
+            <div className="inline-flex items-center gap-1 sm:gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-1.5 sm:px-2 py-0.5 rounded text-[8px] sm:text-[9px] font-bold text-emerald-400 uppercase tracking-wider">
+              <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" /> <span className="truncate">Todo o Tempo</span>
+            </div>
           </div>
         </div>
 
         {/* Receita do Período */}
-        <div className="bg-zinc-900/40 border border-white/5 hover:border-red-500/30 hover:-translate-y-0.5 hover:shadow-2xl rounded-xl p-4 relative overflow-hidden group transition-all duration-300 backdrop-blur-xl">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest">Vendas ({dateRange})</span>
-            <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.1)] group-hover:shadow-[0_0_25px_rgba(239,68,68,0.2)] transition-all">
-              <ShoppingBag className="w-4 h-4" />
+        <div className="bg-zinc-900/40 border border-white/5 hover:border-red-500/30 hover:-translate-y-0.5 hover:shadow-2xl rounded-xl p-3 sm:p-4 relative overflow-hidden group transition-all duration-300 backdrop-blur-xl flex flex-col justify-between">
+          <div className="flex items-start justify-between mb-2 sm:mb-3 gap-1">
+            <span className="text-zinc-400 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest leading-tight">Vendas ({dateRange === 'today' ? 'Hoje' : dateRange === 'week' ? '7d' : dateRange === 'month' ? 'Mês' : 'All'})</span>
+            <div className="w-6 h-6 sm:w-8 sm:h-8 shrink-0 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.1)] group-hover:shadow-[0_0_25px_rgba(239,68,68,0.2)] transition-all">
+              <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <h3 className="text-2xl font-black text-white tracking-tighter mb-3">MT {periodRevenue.toLocaleString()}</h3>
-          <div className="inline-flex items-center gap-1.5 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded text-[9px] font-bold text-red-400 uppercase tracking-wider">
-            <ArrowUpRight className="w-3 h-3" /> Valor do Período
+          <div>
+            <h3 className="text-base sm:text-2xl font-black text-white tracking-tighter mb-2 sm:mb-3 truncate">MT {periodRevenue.toLocaleString()}</h3>
+            <div className="inline-flex items-center gap-1 sm:gap-1.5 bg-red-500/10 border border-red-500/20 px-1.5 sm:px-2 py-0.5 rounded text-[8px] sm:text-[9px] font-bold text-red-400 uppercase tracking-wider">
+              <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" /> <span className="truncate">Período</span>
+            </div>
           </div>
         </div>
 
         {/* Conversão de Previews */}
-        <div className="bg-zinc-900/40 border border-white/5 hover:border-amber-500/30 hover:-translate-y-0.5 hover:shadow-2xl rounded-xl p-4 relative overflow-hidden group transition-all duration-300 backdrop-blur-xl">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest">Conversão</span>
-            <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.1)] group-hover:shadow-[0_0_25px_rgba(245,158,11,0.2)] transition-all">
-              <Percent className="w-4 h-4" />
+        <div className="bg-zinc-900/40 border border-white/5 hover:border-amber-500/30 hover:-translate-y-0.5 hover:shadow-2xl rounded-xl p-3 sm:p-4 relative overflow-hidden group transition-all duration-300 backdrop-blur-xl flex flex-col justify-between">
+          <div className="flex items-start justify-between mb-2 sm:mb-3 gap-1">
+            <span className="text-zinc-400 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest leading-tight">Conversão</span>
+            <div className="w-6 h-6 sm:w-8 sm:h-8 shrink-0 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.1)] group-hover:shadow-[0_0_25px_rgba(245,158,11,0.2)] transition-all">
+              <Percent className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <h3 className="text-2xl font-black text-white tracking-tighter mb-3">{totalSalesCount > 0 ? '14.8%' : '0%'}</h3>
-          <div className="inline-flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded text-[9px] font-bold text-amber-400 uppercase tracking-wider">
-            <ArrowUpRight className="w-3 h-3" /> Amostras ➔ Pagamento
+          <div>
+            <h3 className="text-base sm:text-2xl font-black text-white tracking-tighter mb-2 sm:mb-3 truncate">{totalSalesCount > 0 ? '14.8%' : '0%'}</h3>
+            <div className="inline-flex items-center gap-1 sm:gap-1.5 bg-amber-500/10 border border-amber-500/20 px-1.5 sm:px-2 py-0.5 rounded text-[8px] sm:text-[9px] font-bold text-amber-400 uppercase tracking-wider">
+              <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" /> <span className="truncate">Views ➔ Pag.</span>
+            </div>
           </div>
         </div>
 
         {/* Alugueres e Compras */}
-        <div className="bg-zinc-900/40 border border-white/5 hover:border-purple-500/30 hover:-translate-y-0.5 hover:shadow-2xl rounded-xl p-4 relative overflow-hidden group transition-all duration-300 backdrop-blur-xl">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest">Acessos</span>
-            <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.1)] group-hover:shadow-[0_0_25px_rgba(168,85,247,0.2)] transition-all">
-              <PlayCircle className="w-4 h-4" />
+        <div className="bg-zinc-900/40 border border-white/5 hover:border-purple-500/30 hover:-translate-y-0.5 hover:shadow-2xl rounded-xl p-3 sm:p-4 relative overflow-hidden group transition-all duration-300 backdrop-blur-xl flex flex-col justify-between">
+          <div className="flex items-start justify-between mb-2 sm:mb-3 gap-1">
+            <span className="text-zinc-400 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest leading-tight">Acessos</span>
+            <div className="w-6 h-6 sm:w-8 sm:h-8 shrink-0 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.1)] group-hover:shadow-[0_0_25px_rgba(168,85,247,0.2)] transition-all">
+              <PlayCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <h3 className="text-2xl font-black text-white tracking-tighter mb-3">{totalSalesCount} <span className="text-sm font-bold text-zinc-500">Vídeos</span></h3>
-          <div className="inline-flex items-center gap-1.5 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded text-[9px] font-bold text-purple-400 uppercase tracking-wider">
-            <ArrowUpRight className="w-3 h-3" /> {purchasesCount} Compras | {rentalsCount} Alugueres
+          <div>
+            <h3 className="text-base sm:text-2xl font-black text-white tracking-tighter mb-2 sm:mb-3 truncate">{totalSalesCount} <span className="text-[10px] sm:text-sm font-bold text-zinc-500">Víd</span></h3>
+            <div className="inline-flex items-center gap-1 sm:gap-1.5 bg-purple-500/10 border border-purple-500/20 px-1.5 sm:px-2 py-0.5 rounded text-[8px] sm:text-[9px] font-bold text-purple-400 uppercase tracking-wider">
+              <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" /> <span className="truncate">{purchasesCount} Comp | {rentalsCount} Alug</span>
+            </div>
           </div>
         </div>
 
