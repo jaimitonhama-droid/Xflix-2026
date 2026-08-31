@@ -5,6 +5,7 @@ import { useState, use, useEffect } from "react";
 import { VideoActions } from "./VideoActions";
 import { VideoCard } from "@/components/ui/VideoCard";
 import { PreviewPlayer } from "@/components/ui/PreviewPlayer";
+import { PaywallModal } from "@/components/ui/PaywallModal";
 import { Eye, ShieldCheck, Film, ThumbsUp, MessageSquare } from "lucide-react";
 
 import { createClient } from "@/services/supabase/client";
@@ -16,12 +17,15 @@ export default function VideoDetailsPage({ params }: { params: Promise<{ id: str
   const [video, setVideo] = useState<any>(null);
   const [relatedVideos, setRelatedVideos] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [hasSubscription, setHasSubscription] = useState(false);
 
   const supabase = createClient();
 
   useEffect(() => {
-    const fetchVideo = async () => {
+    const fetchData = async () => {
       try {
+        // 1. Fetch Video
         const { data: videoData } = await supabase
           .from("videos")
           .select("*, category:categories(name)")
@@ -31,14 +35,55 @@ export default function VideoDetailsPage({ params }: { params: Promise<{ id: str
         if (videoData) {
           setVideo(videoData);
           
-          let query = supabase.from("videos").select("*, category:categories(name)").neq("id", videoData.id).eq("status", "published").limit(8);
-          if (videoData.category_id) {
-            query = query.eq("category_id", videoData.category_id);
-          }
+          // 1º Tentar buscar vídeos da mesma categoria
+          let { data: relatedData } = await supabase
+            .from("videos")
+            .select("*, category:categories(name)")
+            .neq("id", videoData.id)
+            .eq("status", "published")
+            .eq("category_id", videoData.category_id || "")
+            .limit(4);
           
-          const { data: relatedData } = await query;
+          // Se não tiver pelo menos 4 vídeos, preencher com outros vídeos aleatórios
+          if (!relatedData || relatedData.length < 4) {
+             const excludeIds = [videoData.id];
+             if (relatedData) {
+               relatedData.forEach(v => excludeIds.push(v.id));
+             }
+             
+             const { data: moreData } = await supabase
+              .from("videos")
+              .select("*, category:categories(name)")
+              .not("id", "in", `(${excludeIds.join(',')})`)
+              .eq("status", "published")
+              .limit(4 - (relatedData?.length || 0));
+              
+             if (moreData) {
+                relatedData = [...(relatedData || []), ...moreData];
+             }
+          }
+
           if (relatedData) setRelatedVideos(relatedData);
         }
+
+        // 2. Check Subscription
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("subscription_status")
+            .eq("user_id", session.user.id)
+            .single();
+          
+          if (profile?.subscription_status === "active") {
+            setHasSubscription(true);
+          } else {
+            setShowPaywall(true);
+          }
+        } else {
+          setShowPaywall(true); // User is not logged in, show paywall
+        }
+
       } catch (err) {
         console.error(err);
       } finally {
@@ -46,7 +91,7 @@ export default function VideoDetailsPage({ params }: { params: Promise<{ id: str
       }
     };
 
-    fetchVideo();
+    fetchData();
   }, [resolvedParams.id]);
 
   if (isLoading) {
@@ -80,14 +125,51 @@ export default function VideoDetailsPage({ params }: { params: Promise<{ id: str
   return (
     <div className="w-full pb-16">
       {/* Container Principal do Player */}
-      <div className="w-full bg-[#030303] border-b border-zinc-900 pt-0 md:pt-6">
-        <div className="max-w-7xl mx-auto px-0 md:px-4">
-          <PreviewPlayer 
-            src={video.video_url}
-            poster={video.thumbnail_url || undefined}
-          />
+      <div className="w-full bg-[#030303] border-b border-zinc-900 pt-0 md:pt-6 relative">
+        <div className="max-w-7xl mx-auto px-0 md:px-4 relative">
+          
+          {hasSubscription ? (
+            <PreviewPlayer 
+              src={video.video_url}
+              poster={video.thumbnail_url || undefined}
+            />
+          ) : (
+            <div className="w-full aspect-video bg-zinc-950 flex flex-col items-center justify-center relative overflow-hidden rounded-lg">
+              {/* Blurred background thumbnail */}
+              {video.thumbnail_url && (
+                <img 
+                  src={video.thumbnail_url} 
+                  className="absolute inset-0 w-full h-full object-cover blur-xl opacity-30" 
+                  alt="Background" 
+                />
+              )}
+              
+              <div className="z-10 flex flex-col items-center text-center p-6 space-y-4 max-w-md">
+                <ShieldCheck className="w-16 h-16 text-red-500 mb-2" />
+                <h2 className="text-2xl font-black text-white">Conteúdo Exclusivo VIP</h2>
+                <p className="text-zinc-400 text-sm">Assine o nosso plano semanal para desbloquear este e todos os outros vídeos da plataforma ilimitadamente.</p>
+                <button 
+                  onClick={() => setShowPaywall(true)}
+                  className="mt-4 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full transition-colors"
+                >
+                  Desbloquear Agora
+                </button>
+              </div>
+            </div>
+          )}
+          
         </div>
       </div>
+      
+      <PaywallModal 
+        isOpen={showPaywall} 
+        onClose={() => {
+          // Em um app real, onClose não desbloqueia. O desbloqueio acontece pelo webhook.
+          // Mas para testes, podemos fechar o modal.
+          setShowPaywall(false);
+        }} 
+        videoId={video.id} 
+      />
 
       <div className="max-w-7xl mx-auto px-6 md:px-8 mt-8 md:mt-12">
         <div className="flex flex-col lg:flex-row gap-12">
@@ -150,53 +232,7 @@ export default function VideoDetailsPage({ params }: { params: Promise<{ id: str
             )}
           </div>
 
-          {/* Paginação */}
-          <div className="pt-10 pb-6 flex justify-center w-full overflow-hidden">
-            <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2 max-w-full">
-              <button 
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="flex items-center justify-center h-8 sm:h-10 px-2 sm:px-3 bg-zinc-900 border border-zinc-800 rounded text-xs sm:text-sm text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Ant.
-              </button>
-              
-              {[1, 2, 3].map((page) => (
-                <button 
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`flex items-center justify-center w-8 sm:w-10 h-8 sm:h-10 rounded text-xs sm:text-sm font-bold transition-colors ${
-                    page === currentPage 
-                      ? "bg-red-600 text-white border border-red-600" 
-                      : "bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white"
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-
-              <span className="flex items-center justify-center w-6 sm:w-8 h-8 sm:h-10 text-zinc-500 text-xs sm:text-sm">...</span>
-              
-              <button 
-                onClick={() => setCurrentPage(42)}
-                className={`flex items-center justify-center w-8 sm:w-10 h-8 sm:h-10 rounded text-xs sm:text-sm font-bold transition-colors ${
-                    currentPage === 42 
-                      ? "bg-red-600 text-white border border-red-600" 
-                      : "bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white"
-                  }`}
-              >
-                42
-              </button>
-
-              <button 
-                onClick={() => setCurrentPage(prev => Math.min(42, prev + 1))}
-                disabled={currentPage === 42}
-                className="flex items-center justify-center h-8 sm:h-10 px-2 sm:px-3 bg-zinc-900 border border-zinc-800 rounded text-xs sm:text-sm text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Próx.
-              </button>
-            </div>
-          </div>
+          {/* A paginação foi removida porque 4 vídeos não precisam dela! */}
         </div>
       </div>
     </div>

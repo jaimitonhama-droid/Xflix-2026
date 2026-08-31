@@ -11,29 +11,34 @@ export default function HomePage() {
   const [activeCategory, setActiveCategory] = useState<string>("Todos");
   const [currentPage, setCurrentPage] = useState<number>(1);
 
-  const categories = [
-    "Todos",
-    "Exclusivos VIP",
-    "Cenas Completas HD",
-    "Lançamentos",
-    "Populares & Virais",
-  ];
-
+  const [categories, setCategories] = useState<string[]>(["Todos"]);
   const [videos, setVideos] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const supabase = createClient();
 
   useEffect(() => {
-    const fetchRealVideos = async () => {
+    const fetchData = async () => {
       try {
-        const { data, error } = await supabase
+        // Buscar Vídeos
+        const { data: videoData } = await supabase
           .from("videos")
           .select("*, category:categories(name)")
           .eq("status", "published")
           .order("created_at", { ascending: false });
         
-        if (data) {
-          setVideos(data);
+        if (videoData) {
+          setVideos(videoData);
+        }
+
+        // Buscar Categorias Ativas do Banco de Dados
+        const { data: catData } = await supabase
+          .from("categories")
+          .select("name")
+          .eq("status", "active");
+
+        if (catData) {
+          const catNames = catData.map(c => c.name);
+          setCategories(["Todos", ...catNames]);
         }
       } catch (err) {
         console.error(err);
@@ -41,12 +46,17 @@ export default function HomePage() {
         setIsLoading(false);
       }
     };
-    fetchRealVideos();
+    fetchData();
   }, []);
 
   const filteredVideos = activeCategory === "Todos" 
     ? videos 
     : videos.filter(v => v.category?.name === activeCategory || v.category === activeCategory);
+
+  // Lógica de Paginação
+  const ITEMS_PER_PAGE = 8;
+  const totalPages = Math.max(1, Math.ceil(filteredVideos.length / ITEMS_PER_PAGE));
+  const paginatedVideos = filteredVideos.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
     <div className="w-full flex flex-col pb-16 pt-2 space-y-10 select-none">
@@ -67,27 +77,31 @@ export default function HomePage() {
           
           {/* Pílulas de Categorias (Estilo Pílula Arredondada Premium) */}
           <div className="flex items-center gap-3 overflow-x-auto pb-4 md:pb-0 scroll-row -mx-6 px-6 md:mx-0 md:px-0">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => {
-                  setActiveCategory(cat);
-                  setCurrentPage(1); // Reset page on category change
-                }}
-                className={`px-6 py-3 md:py-2.5 rounded-full text-[13px] md:text-xs font-bold whitespace-nowrap transition-all duration-300 border flex-shrink-0 ${
-                  activeCategory === cat
-                    ? "bg-white border-white text-zinc-950 shadow-[0_4px_15px_rgba(255,255,255,0.15)] scale-105"
-                    : "bg-[#111113] border-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-800"
-                }`}
-              >
-                {cat === "Todos" && "🔥 "}
-                {cat === "Exclusivos VIP" && "⭐ "}
-                {cat === "Cenas Completas HD" && "🎬 "}
-                {cat === "Lançamentos" && "🚀 "}
-                {cat === "Populares & Virais" && "⚡ "}
-                {cat}
-              </button>
-            ))}
+            {categories.map((cat) => {
+              // Ícones baseados no nome da categoria para manter um visual bonito
+              let icon = "🎬 ";
+              if (cat === "Todos") icon = "🔥 ";
+              else if (cat.includes("VIP") || cat.includes("Exclusivo")) icon = "⭐ ";
+              else if (cat.includes("Lançamento") || cat.includes("Novo")) icon = "🚀 ";
+              else if (cat.includes("Popular") || cat.includes("Viral") || cat.includes("Visto")) icon = "⚡ ";
+
+              return (
+                <button
+                  key={cat}
+                  onClick={() => {
+                    setActiveCategory(cat);
+                    setCurrentPage(1); // Reset page on category change
+                  }}
+                  className={`px-6 py-3 md:py-2.5 rounded-full text-[13px] md:text-xs font-bold whitespace-nowrap transition-all duration-300 border flex-shrink-0 ${
+                    activeCategory === cat
+                      ? "bg-white border-white text-zinc-950 shadow-[0_4px_15px_rgba(255,255,255,0.15)] scale-105"
+                      : "bg-[#111113] border-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-800"
+                  }`}
+                >
+                  {icon}{cat}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -104,7 +118,7 @@ export default function HomePage() {
               </div>
             ))
           ) : (
-            filteredVideos.map((video) => {
+            paginatedVideos.map((video) => {
               return (
                 <VideoCard 
                   key={`video-${video.id}`}
@@ -131,12 +145,12 @@ export default function HomePage() {
               <Film className="w-8 h-8 text-zinc-600" />
             </div>
             <h3 className="text-xl font-bold text-white">Nenhum vídeo encontrado</h3>
-            <p className="text-zinc-500 max-w-md">Você ainda não tem vídeos reais publicados no banco de dados. Os vídeos de exemplo foram removidos.</p>
+            <p className="text-zinc-500 max-w-md">Você ainda não tem vídeos nesta categoria.</p>
           </div>
         )}
 
         {/* Paginação */}
-        {!isLoading && filteredVideos.length > 0 && (
+        {!isLoading && totalPages > 1 && (
           <div className="pt-10 pb-6 flex justify-center w-full overflow-hidden">
             <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2 max-w-full">
               <button 
@@ -147,14 +161,26 @@ export default function HomePage() {
                 Ant.
               </button>
               
-              <button 
-                className="flex items-center justify-center w-8 sm:w-10 h-8 sm:h-10 rounded text-xs sm:text-sm font-bold transition-colors bg-red-600 text-white border border-red-600"
-              >
-                1
-              </button>
+              {Array.from({ length: totalPages }).map((_, idx) => {
+                const page = idx + 1;
+                return (
+                  <button 
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`flex items-center justify-center w-8 sm:w-10 h-8 sm:h-10 rounded text-xs sm:text-sm font-bold transition-colors ${
+                      currentPage === page 
+                        ? "bg-red-600 text-white border border-red-600" 
+                        : "bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              })}
 
               <button 
-                disabled
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
                 className="flex items-center justify-center h-8 sm:h-10 px-2 sm:px-3 bg-zinc-900 border border-zinc-800 rounded text-xs sm:text-sm text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Próx.

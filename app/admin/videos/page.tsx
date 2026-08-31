@@ -375,17 +375,7 @@ export default function AdminVideosPage() {
                 </h3>
                 <p className="text-zinc-400 text-[10px] sm:text-xs line-clamp-2 leading-tight">{v.description || "Sem descrição informada."}</p>
                 
-                {/* Preços (Compra e Aluguer) */}
-                <div className="flex flex-col gap-1.5 pt-2 border-t border-zinc-800/60">
-                  <div className="bg-zinc-900/60 px-2 py-1.5 sm:p-2 rounded-lg border border-zinc-800 flex justify-between items-center">
-                    <span className="text-[8px] sm:text-[10px] text-zinc-400 uppercase font-semibold">Compra</span>
-                    <span className="text-emerald-400 font-extrabold text-[10px] sm:text-sm">MT {v.price}</span>
-                  </div>
-                  <div className="bg-zinc-900/60 px-2 py-1.5 sm:p-2 rounded-lg border border-zinc-800 flex justify-between items-center">
-                    <span className="text-[8px] sm:text-[10px] text-zinc-400 uppercase font-semibold">Aluguer</span>
-                    <span className="text-amber-400 font-extrabold text-[10px] sm:text-sm">MT {v.rental_price}</span>
-                  </div>
-                </div>
+
               </div>
             </div>
 
