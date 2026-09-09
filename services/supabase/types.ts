@@ -63,8 +63,8 @@ export interface Favorite {
 export interface Order {
   id: string;
   user_id: string;
-  video_id: string;
-  purchase_type: "buy" | "rent";
+  video_id: string | null;
+  purchase_type: "buy" | "rent" | "vip";
   payment_status: "pending" | "completed" | "failed" | "refunded";
   amount: number;
   payment_reference: string | null;

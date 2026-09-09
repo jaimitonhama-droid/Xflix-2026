@@ -1,23 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Smartphone, Loader2, Lock } from "lucide-react";
-import { processCheckout } from "@/app/checkout/actions";
+import { X, Smartphone, Loader2, Crown } from "lucide-react";
 
-type CheckoutModalProps = {
+type VipCheckoutModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  videoId: string;
-  paymentType: "buy" | "rent";
-  price: number;
-  title: string;
 };
 
-export function CheckoutModal({ isOpen, onClose, videoId, paymentType, price, title }: CheckoutModalProps) {
+export function VipCheckoutModal({ isOpen, onClose }: VipCheckoutModalProps) {
   const [phone, setPhone] = useState("");
   const [method, setMethod] = useState<"mpesa" | "emola">("mpesa");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+
+  const price = 25; // Preço fixo VIP
 
   // Auto-detect operator based on phone prefix (84/85 -> M-Pesa, 86/87 -> e-Mola)
   useEffect(() => {
@@ -31,12 +29,30 @@ export function CheckoutModal({ isOpen, onClose, videoId, paymentType, price, ti
 
   if (!isOpen) return null;
 
-  const handleSubmit = async (formData: FormData) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
     setErrorMsg("");
-    const res = await processCheckout(formData);
-    if (res?.error) {
-      setErrorMsg(res.error);
+    setSuccessMsg("");
+
+    try {
+      const response = await fetch("/api/payments/netshop/charge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, method })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || data.error) {
+        throw new Error(data.error || "Ocorreu um erro no processamento.");
+      }
+
+      setSuccessMsg(data.message || "Pedido enviado! Confirme o PIN no seu telemóvel.");
+      // Fechar após uns segundos ou manter aberto enquanto aguarda webhook via websocket (futuro)
+    } catch (err: any) {
+      setErrorMsg(err.message || "Falha na comunicação com o servidor.");
+    } finally {
       setIsLoading(false);
     }
   };
@@ -54,14 +70,14 @@ export function CheckoutModal({ isOpen, onClose, videoId, paymentType, price, ti
         </button>
 
         <div className="pt-2 text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto text-red-500 shadow-sm">
-            <Lock className="w-6 h-6" />
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto text-amber-500 shadow-sm">
+            <Crown className="w-6 h-6" />
           </div>
           <h2 className="text-2xl font-black text-white tracking-tight">
-            {paymentType === "buy" ? "Comprar Vídeo +18" : "Alugar por 24h"}
+            Assinatura VIP
           </h2>
           <p className="text-zinc-400 text-xs font-medium truncate max-w-xs mx-auto">
-            {title}
+            Acesso ilimitado a todos os vídeos por 7 dias
           </p>
         </div>
 
@@ -70,17 +86,19 @@ export function CheckoutModal({ isOpen, onClose, videoId, paymentType, price, ti
             {errorMsg}
           </div>
         )}
+        {successMsg && (
+          <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-xl text-green-400 text-xs font-semibold text-center animate-pulse">
+            {successMsg}
+          </div>
+        )}
 
-        <form action={handleSubmit} className="space-y-6">
-          <input type="hidden" name="videoId" value={videoId} />
-          <input type="hidden" name="paymentType" value={paymentType} />
-
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Resumo do Valor */}
           <div className="text-center py-1 space-y-1">
             <span className="text-xs uppercase font-bold text-zinc-500 tracking-wider">Total a pagar</span>
             <div className="flex items-baseline justify-center gap-1.5">
               <span className="text-4xl font-black text-white tracking-tight">{price}</span>
-              <span className="text-base font-bold text-red-500">MT</span>
+              <span className="text-base font-bold text-amber-500">MT</span>
             </div>
           </div>
 
@@ -143,26 +161,28 @@ export function CheckoutModal({ isOpen, onClose, videoId, paymentType, price, ti
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
                 placeholder={method === "mpesa" ? "Ex: 841234567" : "Ex: 861234567"}
                 required
-                className="w-full bg-zinc-900/90 border border-zinc-800 text-white rounded-2xl pl-12 pr-4 py-4 focus:outline-none focus:border-red-500 transition-colors font-bold text-lg tracking-wider placeholder:text-zinc-600 placeholder:font-normal placeholder:tracking-normal"
+                className="w-full bg-zinc-900/90 border border-zinc-800 text-white rounded-2xl pl-12 pr-4 py-4 focus:outline-none focus:border-amber-500 transition-colors font-bold text-lg tracking-wider placeholder:text-zinc-600 placeholder:font-normal placeholder:tracking-normal"
               />
               <Smartphone className="w-5 h-5 text-zinc-500 absolute left-4 top-1/2 -translate-y-1/2" />
             </div>
             <p className="text-[11px] text-zinc-500 text-center font-medium">
-              Receberá uma notificação no telemóvel para introduzir o seu PIN.
+              Receberá um PIN no seu telemóvel para confirmar o pagamento.
             </p>
           </div>
 
           {/* Botão de Pagar */}
           <button 
             type="submit"
-            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-black text-base py-4.5 rounded-2xl transition-all duration-300 shadow-[0_0_20px_rgba(220,38,38,0.35)] disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={isLoading || phone.length < 9}
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-black text-base py-4.5 rounded-2xl transition-all duration-300 shadow-[0_0_20px_rgba(245,158,11,0.35)] disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isLoading || phone.length < 9 || !!successMsg}
           >
             {isLoading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
                 <span>A processar...</span>
               </>
+            ) : successMsg ? (
+              "Aguardando Confirmação..."
             ) : (
               `Pagar ${price} MT via ${method === "mpesa" ? "M-Pesa" : "e-Mola"}`
             )}

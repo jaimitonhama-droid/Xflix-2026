@@ -8,8 +8,6 @@ interface VideoItem {
   id: string;
   title: string;
   description: string;
-  price: number;
-  rental_price: number;
   category: string;
   preview_seconds: number;
   thumbnail_url: string;
@@ -34,8 +32,6 @@ export default function AdminVideosPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("Exclusivos VIP");
-  const [price, setPrice] = useState("500");
-  const [rentalPrice, setRentalPrice] = useState("150");
   const [previewSeconds, setPreviewSeconds] = useState("15");
 
   // Ficheiros Selecionados
@@ -66,8 +62,6 @@ export default function AdminVideosPage() {
           id: v.id,
           title: v.title,
           description: v.description || "",
-          price: v.price || 0,
-          rental_price: v.rental_price || 0,
           category: v.category?.name || "Sem Categoria",
           preview_seconds: v.duration || 15,
           thumbnail_url: v.thumbnail_url || "https://images.unsplash.com/photo-1542051812871-757500d5a228?q=80&w=800&auto=format&fit=crop",
@@ -115,7 +109,7 @@ export default function AdminVideosPage() {
             if (thumbnailPreviewUrl) URL.revokeObjectURL(thumbnailPreviewUrl);
             setThumbnailPreviewUrl(URL.createObjectURL(blob));
           }
-        }, "image/jpeg", 0.85);
+        }, "image/jpeg", 1.0);
       }
     }
   };
@@ -212,8 +206,8 @@ export default function AdminVideosPage() {
         .insert({
           title,
           description,
-          price: parseFloat(price) || 0,
-          rental_price: parseFloat(rentalPrice) || 0,
+          price: 0,
+          rental_price: 0,
           status: "published",
           thumbnail_url: finalThumbnailUrl,
           video_url: videoUrl,
@@ -246,8 +240,6 @@ export default function AdminVideosPage() {
   const resetForm = () => {
     setTitle("");
     setDescription("");
-    setPrice("500");
-    setRentalPrice("150");
     setVideoFile(null);
     if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl);
     setVideoPreviewUrl(null);
@@ -408,7 +400,7 @@ export default function AdminVideosPage() {
       {/* Modal de Publicar Novo Vídeo +18 (Redesenhado para Mobile) */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/90 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[#121215] border border-zinc-800 w-full max-w-2xl rounded-2xl sm:rounded-3xl flex flex-col max-h-[95vh] sm:max-h-[90vh] shadow-2xl relative">
+          <div className="bg-[#121215] border border-zinc-800 w-full max-w-2xl rounded-2xl sm:rounded-3xl flex flex-col max-h-[80vh] sm:max-h-[90vh] shadow-2xl relative">
             
             {/* Header Fixo do Modal */}
             <div className="flex-shrink-0 flex items-center justify-between p-3 sm:p-6 border-b border-zinc-800/80">
@@ -477,11 +469,7 @@ export default function AdminVideosPage() {
                   />
                 </div>
 
-                {/* Preços (Compra e Aluguer) - Ocultos na Versão V1 Gratuita */}
-                <div className="hidden">
-                  <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
-                  <input type="number" value={rentalPrice} onChange={(e) => setRentalPrice(e.target.value)} />
-                </div>
+
 
                 {/* Uploads (Ficheiro de Vídeo) */}
                 <div className="space-y-3 sm:space-y-5 pt-2 border-t border-zinc-800/80">
@@ -536,6 +524,8 @@ export default function AdminVideosPage() {
                               src={videoPreviewUrl} 
                               controls
                               controlsList="nodownload"
+                              preload="metadata"
+                              playsInline
                               className="w-full h-full object-contain"
                             />
                           </div>
@@ -599,12 +589,12 @@ export default function AdminVideosPage() {
               </form>
             </div>
 
-            {/* Rodapé Fixo (Botões) */}
-            <div className="flex-shrink-0 p-3 sm:p-6 border-t border-zinc-800/80 bg-[#121215] flex flex-row items-center justify-end gap-3 sm:gap-3 rounded-b-2xl sm:rounded-b-3xl">
+            {/* Rodapé Fixo (Botões) - Restaurado para fora do formulário para melhor design */}
+            <div className="flex-shrink-0 p-4 sm:p-6 border-t border-zinc-800/80 bg-[#121215] flex flex-row items-center justify-end gap-3 rounded-b-2xl sm:rounded-b-3xl mt-auto">
               <button 
                 type="button"
                 onClick={() => { setIsModalOpen(false); resetForm(); }}
-                className="w-full sm:w-auto bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-bold px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-[11px] sm:text-sm transition-colors"
+                className="w-full sm:w-auto bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-bold px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-xs sm:text-sm transition-colors"
               >
                 Cancelar
               </button>
@@ -612,13 +602,11 @@ export default function AdminVideosPage() {
                 type="submit"
                 form="publish-video-form"
                 disabled={isUploading}
-                className="w-full sm:w-auto bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-black px-4 sm:px-8 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-[11px] sm:text-sm transition-all shadow-[0_4px_15px_rgba(220,38,38,0.3)] disabled:opacity-50"
+                className="w-full sm:w-auto bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-black px-4 sm:px-8 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-xs sm:text-sm transition-all shadow-[0_4px_15px_rgba(220,38,38,0.3)] disabled:opacity-50"
               >
                 {isUploading ? "A processar..." : "Publicar Vídeo"}
               </button>
-            </div>
-
-          </div>
+            </div>          </div>
         </div>
       )}
 

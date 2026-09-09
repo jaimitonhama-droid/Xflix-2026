@@ -34,9 +34,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="max-w-7xl mx-auto">
           <div className="md:hidden flex items-center justify-between mb-6 pb-4 border-b border-white/5">
              <div className="flex items-center gap-2">
-               <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-red-700 to-red-500 flex items-center justify-center shadow-lg">
-                 <span className="text-white font-black text-sm">X</span>
-               </div>
                <span className="text-base font-black text-white tracking-wider">XFLIX ADMIN</span>
              </div>
              <button 

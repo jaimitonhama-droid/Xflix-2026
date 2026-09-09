@@ -42,6 +42,7 @@ export function VideoCard({
               src={imageUrl} 
               alt={title} 
               fill
+              unoptimized={true}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               loading="lazy"
               className="object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"

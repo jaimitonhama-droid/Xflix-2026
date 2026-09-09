@@ -129,8 +129,8 @@ CREATE TRIGGER videos_updated_at
 CREATE TABLE public.orders (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id           UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  video_id          UUID NOT NULL REFERENCES public.videos(id) ON DELETE CASCADE,
-  purchase_type     TEXT NOT NULL CHECK (purchase_type IN ('buy', 'rent')),
+  video_id          UUID REFERENCES public.videos(id) ON DELETE CASCADE,
+  purchase_type     TEXT NOT NULL CHECK (purchase_type IN ('buy', 'rent', 'vip')),
   payment_status    TEXT NOT NULL DEFAULT 'pending' CHECK (payment_status IN ('pending', 'completed', 'failed', 'refunded')),
   amount            NUMERIC(10, 2) NOT NULL,
   payment_reference TEXT,

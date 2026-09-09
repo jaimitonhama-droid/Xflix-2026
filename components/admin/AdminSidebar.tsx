@@ -30,9 +30,6 @@ export function AdminSidebar({ isOpen = false, onClose = () => {} }: { isOpen?: 
         <div className="p-6 overflow-y-auto flex-1">
         {/* Brand Header */}
         <Link href="/" className="flex items-center gap-3 mb-10 group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-red-700 to-red-500 flex items-center justify-center shadow-[0_0_15px_rgba(220,38,38,0.35)] group-hover:shadow-[0_0_25px_rgba(220,38,38,0.5)] transition-all duration-300">
-            <span className="text-white font-black text-lg">X</span>
-          </div>
           <div>
             <div className="flex items-center gap-1.5">
               <span className="text-lg font-black text-white tracking-wider">XFLIX</span>
