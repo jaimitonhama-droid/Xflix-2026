@@ -83,7 +83,7 @@ export function TopNavbar() {
         className={cn(
           "fixed top-0 right-0 z-[70] h-full w-72",
           "bg-[#111115] border-l border-zinc-800/80",
-          "flex flex-col pt-6 pb-8 px-5",
+          "flex flex-col pt-12 pb-8 px-5",
           "transition-transform duration-300 ease-out md:hidden shadow-2xl",
           isMobileOpen ? "translate-x-0" : "translate-x-full"
         )}
@@ -102,7 +102,7 @@ export function TopNavbar() {
         </div>
 
         {/* Nav Links */}
-        <nav className="flex flex-col gap-2 mb-8">
+        <nav className="flex flex-col gap-4 mb-8">
           <Link
             href="/"
             className="px-4 py-3 rounded-xl text-sm font-bold text-zinc-300 hover:text-white hover:bg-zinc-800/50 transition-colors"
@@ -118,7 +118,7 @@ export function TopNavbar() {
         </nav>
 
         {/* Auth Buttons */}
-        <div className="mt-auto flex flex-col gap-3 pt-6 border-t border-zinc-800">
+        <div className="mt-auto flex flex-col gap-5 pt-6 border-t border-zinc-800">
           <Link 
             href="/login" 
             className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl border border-zinc-700 bg-zinc-900/50 text-sm font-bold text-white hover:bg-zinc-800 transition-colors"

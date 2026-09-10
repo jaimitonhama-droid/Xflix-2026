@@ -34,7 +34,7 @@ export function VideoCard({
 
   return (
     <div className="group relative block bg-[#0a0a0c] md:bg-transparent hover:bg-zinc-900/40 rounded-2xl p-3 md:p-2 border border-white/5 md:border-transparent transition-all duration-300 select-none shadow-sm mx-4 md:mx-0">
-      <Link href={href} className="block relative flex flex-col gap-3">
+      <Link href={href} prefetch={false} className="block relative flex flex-col gap-3">
         {/* Container Quadrado (1:1) para a Thumbnail */}
         <div className="relative aspect-square w-full overflow-hidden bg-zinc-900 rounded-xl shadow-lg border border-zinc-800/80 group-hover:border-red-500/40">
           {imageUrl ? (
@@ -50,7 +50,7 @@ export function VideoCard({
           ) : (
             <video 
               src={videoUrl ? `${videoUrl}#t=0.1` : ""}
-              preload="metadata"
+              preload="none"
               muted
               playsInline
               className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500 bg-zinc-900"

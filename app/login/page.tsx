@@ -57,8 +57,8 @@ export default function LoginPage() {
       </header>
 
       {/* Main Form Card */}
-      <div className="relative w-full max-w-[440px] z-10 my-12 sm:my-16 px-4 sm:px-0">
-        <div className="bg-[#121215]/95 border border-zinc-800/90 rounded-3xl p-6 sm:p-10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] backdrop-blur-2xl">
+      <div className="relative w-full max-w-[440px] z-10 my-8 sm:my-16 px-4 sm:px-0">
+        <div className="bg-[#121215]/95 border border-zinc-800/90 rounded-2xl p-5 sm:p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] backdrop-blur-2xl">
           
           {/* Mode Switcher Tabs */}
           <div className="flex items-center p-1 bg-[#18181b] border border-zinc-800 rounded-2xl mb-6 sm:mb-8">
@@ -130,7 +130,7 @@ export default function LoginPage() {
                 </div>
               )}
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {/* Campo NOME */}
                 <div className="space-y-1.5">
                   <label className="text-xs sm:text-sm font-medium text-zinc-300 block ml-1" htmlFor="xflix-reg-fullname">
@@ -144,9 +144,8 @@ export default function LoginPage() {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       autoComplete="off"
-                      placeholder="Seu nome completo"
                       required
-                      className="block w-full h-11 sm:h-12 pl-4 sm:pl-5 pr-4 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-xs sm:text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
+                      className="block w-full h-10 sm:h-11 pl-4 pr-4 border border-zinc-800/90 rounded-xl bg-[#18181b]/90 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
                     />
                   </div>
                 </div>
@@ -164,9 +163,8 @@ export default function LoginPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       autoComplete="off"
-                      placeholder="seu.email@gmail.com"
                       required
-                      className="block w-full h-11 sm:h-12 pl-4 sm:pl-5 pr-4 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-xs sm:text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
+                      className="block w-full h-10 sm:h-11 pl-4 pr-4 border border-zinc-800/90 rounded-xl bg-[#18181b]/90 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
                     />
                   </div>
                 </div>
@@ -184,10 +182,9 @@ export default function LoginPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       autoComplete="new-password"
-                      placeholder="••••••••"
                       required
                       minLength={6}
-                      className="block w-full h-11 sm:h-12 pl-4 sm:pl-5 pr-11 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-xs sm:text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
+                      className="block w-full h-10 sm:h-11 pl-4 pr-11 border border-zinc-800/90 rounded-xl bg-[#18181b]/90 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
                     />
                     <button
                       type="button"
@@ -213,10 +210,9 @@ export default function LoginPage() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       autoComplete="new-password"
-                      placeholder="Repita a senha"
                       required
                       minLength={6}
-                      className={`block w-full h-11 sm:h-12 pl-4 sm:pl-5 pr-11 border rounded-2xl bg-[#18181b]/90 text-white text-xs sm:text-sm placeholder-zinc-500 focus:outline-none font-medium transition-all ${
+                      className={`block w-full h-10 sm:h-11 pl-4 pr-11 border rounded-xl bg-[#18181b]/90 text-white text-xs placeholder-zinc-500 focus:outline-none font-medium transition-all ${
                         isPasswordMismatch
                           ? "border-red-600 focus:border-red-600 focus:ring-2 focus:ring-red-600/30"
                           : "border-zinc-800/90 focus:border-red-600 focus:ring-2 focus:ring-red-600/30"
@@ -315,7 +311,6 @@ export default function LoginPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       autoComplete="off"
-                      placeholder="seu.email@gmail.com"
                       required
                       className="block w-full h-11 sm:h-12 pl-4 sm:pl-5 pr-4 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-xs sm:text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
                     />
@@ -340,9 +335,8 @@ export default function LoginPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       autoComplete="current-password"
-                      placeholder="••••••••"
                       required
-                      className="block w-full h-11 sm:h-12 pl-4 sm:pl-5 pr-11 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-xs sm:text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
+                      className="block w-full h-10 sm:h-11 pl-4 pr-11 border border-zinc-800/90 rounded-xl bg-[#18181b]/90 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
                     />
                     <button
                       type="button"

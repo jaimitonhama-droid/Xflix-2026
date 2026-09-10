@@ -105,7 +105,7 @@ export function PaywallModal({ isOpen, onClose, videoId, onSuccess }: PaywallMod
             disabled={isLoading || phone.length < 9}
             className="w-full bg-white text-black font-black py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200 disabled:opacity-50 mt-1"
           >
-            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Pagar Agora"}
+            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Confirmar"}
           </button>
           
         </form>

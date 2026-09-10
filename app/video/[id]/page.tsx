@@ -23,6 +23,8 @@ export default function VideoDetailsPage({ params }: { params: Promise<{ id: str
   const supabase = createClient();
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+    
     const fetchData = async () => {
       try {
         // 1. Fetch Video
@@ -77,12 +79,10 @@ export default function VideoDetailsPage({ params }: { params: Promise<{ id: str
           
           if (profile?.subscription_status === "active") {
             setHasSubscription(true);
-          } else {
-            setShowPaywall(true);
           }
-        } else {
-          setShowPaywall(true); // User is not logged in, show paywall
         }
+        // Removemos o setShowPaywall(true) daqui para que o modal não apareça no load da página
+
 
       } catch (err) {
         console.error(err);
@@ -128,35 +128,13 @@ export default function VideoDetailsPage({ params }: { params: Promise<{ id: str
       <div className="w-full bg-[#030303] border-b border-zinc-900 pt-0 md:pt-6 relative">
         <div className="max-w-7xl mx-auto px-0 md:px-4 relative">
           
-          {hasSubscription ? (
-            <PreviewPlayer 
-              src={video.video_url}
-              poster={video.thumbnail_url || undefined}
-            />
-          ) : (
-            <div className="w-full aspect-video bg-zinc-950 flex flex-col items-center justify-center relative overflow-hidden rounded-lg">
-              {/* Blurred background thumbnail */}
-              {video.thumbnail_url && (
-                <img 
-                  src={video.thumbnail_url} 
-                  className="absolute inset-0 w-full h-full object-cover blur-xl opacity-30" 
-                  alt="Background" 
-                />
-              )}
-              
-              <div className="z-10 flex flex-col items-center text-center p-6 space-y-4 max-w-md">
-                <ShieldCheck className="w-16 h-16 text-red-500 mb-2" />
-                <h2 className="text-2xl font-black text-white">Conteúdo Exclusivo VIP</h2>
-                <p className="text-zinc-400 text-sm">Assine o nosso plano semanal para desbloquear este e todos os outros vídeos da plataforma ilimitadamente.</p>
-                <button 
-                  onClick={() => setShowPaywall(true)}
-                  className="mt-4 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full transition-colors"
-                >
-                  Desbloquear Agora
-                </button>
-              </div>
-            </div>
-          )}
+          <PreviewPlayer 
+            src={video.video_url}
+            poster={video.thumbnail_url || undefined}
+            isUnlocked={hasSubscription}
+            limitSeconds={10}
+            onLimitReached={() => setShowPaywall(true)}
+          />
           
         </div>
       </div>

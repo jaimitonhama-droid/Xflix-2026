@@ -41,12 +41,12 @@ export default function RegisterPage() {
       </header>
 
       {/* Main Register Card */}
-      <div className="relative w-full max-w-[440px] z-10 my-16">
-        <div className="bg-[#121215]/95 border border-zinc-800/90 rounded-3xl p-8 sm:p-10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] backdrop-blur-2xl">
+      <div className="relative w-full max-w-[440px] z-10 my-8 sm:my-16 px-4 sm:px-0">
+        <div className="bg-[#121215]/95 border border-zinc-800/90 rounded-2xl p-5 sm:p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] backdrop-blur-2xl">
           
-          <div className="mb-8 text-center">
-            <h1 className="text-3xl font-extrabold text-white tracking-tight mb-2">Criar Conta</h1>
-            <p className="text-xs text-zinc-400 font-medium">Cadastre-se para assistir aos vídeos exclusivos</p>
+          <div className="mb-6 text-center">
+            <h1 className="text-2xl font-extrabold text-white tracking-tight mb-1">Criar Conta</h1>
+            <p className="text-[11px] text-zinc-400 font-medium">Cadastre-se para assistir aos vídeos exclusivos</p>
           </div>
 
           <form action={formAction} autoComplete="off" className="space-y-4">
@@ -61,7 +61,7 @@ export default function RegisterPage() {
               </div>
             )}
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-zinc-300 block ml-1" htmlFor="xflix-reg-name">
                   Nome Completo
@@ -74,9 +74,8 @@ export default function RegisterPage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     autoComplete="new-password"
-                    placeholder="Seu nome completo"
                     required
-                    className="block w-full h-12 pl-5 pr-4 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
+                    className="block w-full h-10 sm:h-11 pl-4 pr-4 border border-zinc-800/90 rounded-xl bg-[#18181b]/90 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
                   />
                 </div>
               </div>
@@ -93,7 +92,6 @@ export default function RegisterPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     autoComplete="new-password"
-                    placeholder="seu.email@exemplo.com"
                     required
                     className="block w-full h-12 pl-5 pr-4 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
                   />
@@ -112,10 +110,9 @@ export default function RegisterPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="new-password"
-                    placeholder="Mínimo 6 caracteres"
                     required
                     minLength={6}
-                    className="block w-full h-12 pl-5 pr-11 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
+                    className="block w-full h-10 sm:h-11 pl-4 pr-11 border border-zinc-800/90 rounded-xl bg-[#18181b]/90 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
                   />
                   <button
                     type="button"
@@ -139,10 +136,9 @@ export default function RegisterPage() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     autoComplete="new-password"
-                    placeholder="Repita a senha"
                     required
                     minLength={6}
-                    className={`block w-full h-12 pl-5 pr-11 border rounded-2xl bg-[#18181b]/90 text-white text-sm placeholder-zinc-500 focus:outline-none font-medium transition-all ${
+                    className={`block w-full h-10 sm:h-11 pl-4 pr-11 border rounded-xl bg-[#18181b]/90 text-white text-xs placeholder-zinc-500 focus:outline-none font-medium transition-all ${
                       isPasswordMismatch
                         ? "border-red-600 focus:border-red-600 focus:ring-2 focus:ring-red-600/30"
                         : "border-zinc-800/90 focus:border-red-600 focus:ring-2 focus:ring-red-600/30"
@@ -187,7 +183,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isPending || isPasswordMismatch}
-              className="w-full flex justify-center items-center h-12 px-4 rounded-2xl text-xs font-bold text-white bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-500 hover:to-red-600 transition-all shadow-[0_0_30px_rgba(220,38,38,0.35)] disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] mt-6 cursor-pointer"
+              className="w-full flex justify-center items-center h-10 sm:h-11 px-4 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-500 hover:to-red-600 transition-all shadow-[0_0_30px_rgba(220,38,38,0.35)] disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] mt-5 cursor-pointer"
             >
               {isPending ? (
                 <>

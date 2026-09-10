@@ -32,6 +32,7 @@ export function PreviewPlayer({
   const [isHovering, setIsHovering] = useState(true);
   const [limitReached, setLimitReached] = useState(false);
   const [isExpired, setIsExpired] = useState(false);
+  const [isVideoReady, setIsVideoReady] = useState(false);
 
   useEffect(() => {
     if (expiresAt) {
@@ -43,11 +44,21 @@ export function PreviewPlayer({
   }, [expiresAt]);
 
   useEffect(() => {
+    // Reseta o estado quando muda de vídeo
+    setLimitReached(false);
+    setIsExpired(false);
+    setProgress(0);
+    setCurrentTime(0);
+    setIsPlaying(false);
+    setIsVideoReady(false);
+
     if (videoRef.current && src) {
       videoRef.current.load();
-      // Tentativa de auto-play na montagem/mudança de source
-      videoRef.current.play().catch(() => {
-        // Ignora erro se o navegador bloquear autoplay
+      // Tenta tocar automaticamente o vídeo principal
+      videoRef.current.play().then(() => {
+        setIsPlaying(true);
+      }).catch(() => {
+        // Ignora erro se o navegador bloquear
       });
     }
   }, [src]);
@@ -118,7 +129,7 @@ export function PreviewPlayer({
       setProgress((current / total) * 100);
 
       // Check limit (only if not unlocked and not explicitly rented/active)
-      const hasAccess = true; // V1: isUnlocked || (expiresAt && !isExpired);
+      const hasAccess = isUnlocked || (expiresAt && !isExpired);
       if (!hasAccess && current >= limitSeconds && !limitReached) {
         videoRef.current.pause();
         setIsPlaying(false);
@@ -143,10 +154,10 @@ export function PreviewPlayer({
     const seekValue = parseFloat(e.target.value);
     const seekTime = (seekValue / 100) * duration;
     
-    // V1: Free Mode - allow seeking anywhere
-    // if (seekTime > limitSeconds && !isUnlocked && !(expiresAt && !isExpired)) {
-    //    return; // Prevent seeking beyond limit if no access
-    // }
+    const hasAccess = isUnlocked || (expiresAt && !isExpired);
+    if (!hasAccess && seekTime > limitSeconds) {
+       return; // Prevent seeking beyond limit if no access
+    }
     
     if (videoRef.current) {
       videoRef.current.currentTime = seekTime;
@@ -180,6 +191,7 @@ export function PreviewPlayer({
         onClick={togglePlay}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
+        onCanPlay={() => setIsVideoReady(true)}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         controlsList="nodownload"
@@ -189,7 +201,22 @@ export function PreviewPlayer({
         preload="metadata"
       />
 
-
+      {/* Loading State / Poster Fallback */}
+      {!isVideoReady && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-10 backdrop-blur-sm">
+          {poster && (
+            <img 
+              src={poster} 
+              alt="Loading" 
+              className="absolute inset-0 w-full h-full object-cover opacity-30 scale-105"
+            />
+          )}
+          <div className="relative flex flex-col items-center z-20">
+            <div className="w-12 h-12 border-4 border-red-600/30 border-t-red-600 rounded-full animate-spin mb-3"></div>
+            <p className="text-white/70 text-xs font-bold uppercase tracking-widest">Carregando</p>
+          </div>
+        </div>
+      )}
 
       {/* Botão de Play no Centro (Menor e Transparente) */}
       {!isPlaying && !limitReached && (
