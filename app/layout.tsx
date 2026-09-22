@@ -11,6 +11,15 @@ import { TopNavbar } from "@/components/layout/TopNavbar";
 export const metadata: Metadata = {
   title: "Xflix",
   description: "A sua plataforma premium de vídeos curtos.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Xflix",
+  },
+  icons: {
+    apple: "/icons/apple-touch-icon.png",
+  },
 };
 
 export const viewport: Viewport = {
@@ -18,6 +27,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  themeColor: "#050505",
 };
 
 export default function RootLayout({
@@ -38,6 +48,20 @@ export default function RootLayout({
             <Footer />
           </AuthProvider>
         </QueryProvider>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').then(
+                    function(registration) { console.log('SW registered'); },
+                    function(err) { console.log('SW failed', err); }
+                  );
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );

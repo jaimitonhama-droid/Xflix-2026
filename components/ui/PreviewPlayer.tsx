@@ -15,7 +15,7 @@ type PreviewPlayerProps = {
 export function PreviewPlayer({
   src,
   poster,
-  limitSeconds = 10,
+  limitSeconds = 5,
   expiresAt,
   isUnlocked = false,
   onLimitReached,
@@ -26,9 +26,11 @@ export function PreviewPlayer({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [volume, setVolume] = useState(0);
-  const [progress, setProgress] = useState(0);
-  const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+
+  // Refs for performance optimization (avoid React re-renders on video playback)
+  const progressRef = useRef<HTMLInputElement>(null);
+  const timeDisplayRef = useRef<HTMLDivElement>(null);
   const [isHovering, setIsHovering] = useState(true);
   const [limitReached, setLimitReached] = useState(false);
   const [isExpired, setIsExpired] = useState(false);
@@ -47,10 +49,16 @@ export function PreviewPlayer({
     // Reseta o estado quando muda de vídeo
     setLimitReached(false);
     setIsExpired(false);
-    setProgress(0);
-    setCurrentTime(0);
     setIsPlaying(false);
     setIsVideoReady(false);
+    
+    if (progressRef.current) {
+      progressRef.current.value = "0";
+      progressRef.current.style.background = `linear-gradient(to right, #ef4444 0%, #27272a 0%)`;
+    }
+    if (timeDisplayRef.current) {
+      timeDisplayRef.current.innerHTML = `00:00 <span class="text-zinc-600">/</span> 00:00`;
+    }
 
     if (videoRef.current && src) {
       videoRef.current.load();
@@ -124,9 +132,18 @@ export function PreviewPlayer({
   const handleTimeUpdate = () => {
     if (videoRef.current) {
       const current = videoRef.current.currentTime;
-      const total = videoRef.current.duration;
-      setCurrentTime(current);
-      setProgress((current / total) * 100);
+      const total = videoRef.current.duration || 1;
+      
+      // Update DOM directly for maximum performance (60fps without React re-renders)
+      if (progressRef.current) {
+        const prog = (current / total) * 100;
+        progressRef.current.value = prog.toString();
+        progressRef.current.style.background = `linear-gradient(to right, #ef4444 ${prog}%, #27272a ${prog}%)`;
+      }
+      
+      if (timeDisplayRef.current) {
+        timeDisplayRef.current.innerHTML = `${formatTime(current)} <span class="text-zinc-600">/</span> ${formatTime(total)}`;
+      }
 
       // Check limit (only if not unlocked and not explicitly rented/active)
       const hasAccess = isUnlocked || (expiresAt && !isExpired);
@@ -161,7 +178,10 @@ export function PreviewPlayer({
     
     if (videoRef.current) {
       videoRef.current.currentTime = seekTime;
-      setProgress(seekValue);
+      if (progressRef.current) {
+        progressRef.current.value = seekValue.toString();
+        progressRef.current.style.background = `linear-gradient(to right, #ef4444 ${seekValue}%, #27272a ${seekValue}%)`;
+      }
     }
   };
 
@@ -266,16 +286,14 @@ export function PreviewPlayer({
         {/* Progress Bar */}
         <div className="flex items-center gap-2 mb-2 w-full group/progress">
           <input
+            ref={progressRef}
             type="range"
             min="0"
             max="100"
-            value={progress}
+            defaultValue="0"
             onChange={handleSeek}
             disabled={limitReached}
             className="w-full h-1.5 bg-zinc-800 rounded-full appearance-none cursor-pointer outline-none transition-all [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-red-500 [&::-webkit-slider-thumb]:rounded-full hover:[&::-webkit-slider-thumb]:w-4 hover:[&::-webkit-slider-thumb]:h-4 [&::-moz-range-progress]:bg-red-500 disabled:cursor-not-allowed"
-            style={{
-              background: `linear-gradient(to right, #ef4444 ${progress}%, #27272a ${progress}%)`
-            }}
           />
         </div>
 
@@ -300,8 +318,11 @@ export function PreviewPlayer({
               />
             </div>
 
-            <div className="text-xs font-semibold text-zinc-300 tabular-nums">
-              {formatTime(currentTime)} <span className="text-zinc-600">/</span> {formatTime(duration)}
+            <div 
+              ref={timeDisplayRef}
+              className="text-xs font-semibold text-zinc-300 tabular-nums"
+            >
+              00:00 <span className="text-zinc-600">/</span> 00:00
             </div>
           </div>
 

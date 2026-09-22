@@ -274,8 +274,8 @@ export default function AdminVideosPage() {
         {/* Cabeçalho */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">Gestão do Catálogo de Vídeos +18</h1>
-            <p className="text-xs sm:text-sm text-zinc-400 mt-1">Adicione novos vídeos, defina capas, preços de aluguer/compra e a prévia gratuita.</p>
+            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">Publicar Vídeos</h1>
+            <p className="text-xs sm:text-sm text-zinc-400 mt-1">Gira o seu catálogo, adicione novos vídeos e defina a capa.</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -397,10 +397,10 @@ export default function AdminVideosPage() {
       </div>
       </div>
 
-      {/* Modal de Publicar Novo Vídeo +18 (Redesenhado para Mobile) */}
+      {/* Modal de Publicar Novo Vídeo +18 (Redesenhado para Mobile - Full Sheet) */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/90 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[#121215] border border-zinc-800 w-full max-w-2xl rounded-2xl sm:rounded-3xl flex flex-col max-h-[80vh] sm:max-h-[90vh] shadow-2xl relative">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/90 backdrop-blur-sm animate-fade-in">
+          <div className="bg-[#121215] sm:border border-zinc-800 w-full max-w-2xl rounded-t-3xl sm:rounded-3xl flex flex-col h-[90vh] sm:h-auto sm:max-h-[90vh] shadow-[0_-10px_40px_rgba(0,0,0,0.5)] sm:shadow-2xl relative animate-in slide-in-from-bottom-10 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300">
             
             {/* Header Fixo do Modal */}
             <div className="flex-shrink-0 flex items-center justify-between p-3 sm:p-6 border-b border-zinc-800/80">
@@ -410,7 +410,6 @@ export default function AdminVideosPage() {
                 </div>
                 <div>
                   <h3 className="text-sm sm:text-lg font-black text-white tracking-tight">Publicar Novo Vídeo</h3>
-                  <p className="text-[10px] sm:text-xs text-zinc-400">Preencha os detalhes e carregue.</p>
                 </div>
               </div>
               
@@ -589,8 +588,8 @@ export default function AdminVideosPage() {
               </form>
             </div>
 
-            {/* Rodapé Fixo (Botões) - Restaurado para fora do formulário para melhor design */}
-            <div className="flex-shrink-0 p-4 sm:p-6 border-t border-zinc-800/80 bg-[#121215] flex flex-row items-center justify-end gap-3 rounded-b-2xl sm:rounded-b-3xl mt-auto">
+            {/* Rodapé Fixo (Botões) */}
+            <div className="flex-shrink-0 p-4 sm:p-6 border-t border-zinc-800/80 bg-[#121215] flex flex-col sm:flex-row items-center justify-end gap-3 sm:rounded-b-3xl mt-auto pb-8 sm:pb-6">
               <button 
                 type="button"
                 onClick={() => { setIsModalOpen(false); resetForm(); }}

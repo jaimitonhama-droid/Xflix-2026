@@ -15,10 +15,9 @@ export function AdminSidebar({ isOpen = false, onClose = () => {} }: { isOpen?: 
   ];
 
   const handleLogout = async () => {
-    const { getAuth, signOut } = await import("firebase/auth");
-    const { app } = await import("@/services/firebase/client");
-    const auth = getAuth(app);
-    await signOut(auth);
+    const { createClient } = await import("@/services/supabase/client");
+    const supabase = createClient();
+    await supabase.auth.signOut();
     window.location.href = "/login";
   };
 

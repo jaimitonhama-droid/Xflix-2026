@@ -186,7 +186,7 @@ function TabContent({ activeTab, profile, user, vipActive, vipDays, refreshProfi
     <>
       {activeTab === "conta"      && <ContaTab      profile={profile} user={user} refreshProfile={refreshProfile} />}
       {activeTab === "vip"        && <VipTab        profile={profile} vipActive={vipActive} vipDays={vipDays} />}
-      {activeTab === "pagamentos" && <PagamentosTab userId={user.uid} />}
+      {activeTab === "pagamentos" && <PagamentosTab userId={user.id} />}
       {activeTab === "seguranca"  && <SegurancaTab  user={user} router={router} />}
     </>
   );
@@ -237,7 +237,7 @@ function ContaTab({ profile, user, refreshProfile }: any) {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true); setError(""); setSuccess(false);
-    const { error: err } = await updateProfile(user.uid, { username });
+    const { error: err } = await updateProfile(user.id, { username });
     if (err) { setError("Erro ao guardar. Tente novamente."); }
     else { setSuccess(true); await refreshProfile(); setTimeout(() => setSuccess(false), 3000); }
     setIsSaving(false);

@@ -2,14 +2,17 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X, LogIn, UserPlus } from "lucide-react";
+import { Menu, X, LogIn, UserPlus, LogOut } from "lucide-react";
 import { SearchBar } from "@/components/ui/SearchBar";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/utils/cn";
+import { createClient } from "@/services/supabase/client";
 
 export function TopNavbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
   
   // Close mobile menu on route change
   useEffect(() => {
@@ -21,11 +24,35 @@ export function TopNavbar() {
     document.body.style.overflow = isMobileOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [isMobileOpen]);
+
+  // Supabase Auth listener
+  useEffect(() => {
+    const supabase = createClient();
+    
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
   
   // Não renderizar a Navbar nas rotas de admin ou login/register
   if (pathname.startsWith("/admin") || pathname === "/login" || pathname === "/register") {
     return null;
   }
+
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    await fetch("/api/auth/session", { method: "DELETE" });
+    router.push("/login");
+  };
 
   return (
     <>
@@ -50,12 +77,24 @@ export function TopNavbar() {
             <SearchBar />
             
             <div className="hidden md:flex items-center gap-4 border-l border-white/10 pl-6">
-              <Link href="/login" className="text-sm font-semibold text-zinc-300 hover:text-white transition-colors">
-                Entrar
-              </Link>
-              <Link href="/register" className="text-sm font-semibold bg-white !text-zinc-950 hover:bg-zinc-200 px-5 py-2 rounded-full transition-all duration-300 transform hover:scale-105">
-                Criar Conta
-              </Link>
+              {user ? (
+                <button
+                  onClick={handleSignOut}
+                  className="text-sm font-semibold text-zinc-300 hover:text-white transition-colors flex items-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sair
+                </button>
+              ) : (
+                <>
+                  <Link href="/login" className="text-sm font-semibold text-zinc-300 hover:text-white transition-colors">
+                    Entrar
+                  </Link>
+                  <Link href="/register" className="text-sm font-semibold bg-white !text-zinc-950 hover:bg-zinc-200 px-5 py-2 rounded-full transition-all duration-300 transform hover:scale-105">
+                    Criar Conta
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
