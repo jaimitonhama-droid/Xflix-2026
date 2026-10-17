@@ -12,8 +12,8 @@ export default function AdminSettingsPage() {
   const [paysuiteSecret, setPaysuiteSecret] = useState("whsec_************************");
 
   // Supabase Settings State
-  const [supabaseUrl, setSupabaseUrl] = useState("https://gvcliwdhgqpbrbvehpsa.supabase.co");
-  const [supabaseAnonKey, setSupabaseAnonKey] = useState("sb_publishable_MyI_gUwwGtaw_qkRjbViMA_tsEBqmRO");
+  const [supabaseUrl, setSupabaseUrl] = useState(process.env.NEXT_PUBLIC_SUPABASE_URL || "https://gvcliwdhgqpbrbvehpsa.supabase.co");
+  const [supabaseAnonKey, setSupabaseAnonKey] = useState(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "");
 
   // Cloudflare R2 Settings State
   const [r2AccountId, setR2AccountId] = useState("r2_account_****************");

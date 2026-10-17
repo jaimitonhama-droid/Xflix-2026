@@ -7,10 +7,12 @@ import { Film, Menu } from "lucide-react";
 import { Footer } from "@/components/layout/Footer";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { TopNavbar } from "@/components/layout/TopNavbar";
+import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
+import { InstallPwaPrompt } from "@/components/ui/InstallPwaPrompt";
 
 export const metadata: Metadata = {
-  title: "Xflix",
-  description: "A sua plataforma premium de vídeos curtos.",
+  title: "Xflix — Catálogo VIP & Loja",
+  description: "A sua plataforma exclusiva de pacotes e conteúdos VIP.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -18,6 +20,7 @@ export const metadata: Metadata = {
     title: "Xflix",
   },
   icons: {
+    icon: "/icons/icon-192x192.png",
     apple: "/icons/apple-touch-icon.png",
   },
 };
@@ -27,7 +30,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#050505",
+  themeColor: "#08080c",
 };
 
 export default function RootLayout({
@@ -46,6 +49,7 @@ export default function RootLayout({
               {children}
             </main>
             <Footer />
+            <InstallPwaPrompt />
           </AuthProvider>
         </QueryProvider>
         <script

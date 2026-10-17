@@ -207,7 +207,7 @@ export function PreviewPlayer({
         ref={videoRef}
         src={src}
         poster={poster}
-        className="w-full max-h-[85vh] object-contain cursor-pointer"
+        className="w-full max-h-[85vh] object-contain cursor-pointer transition-all duration-700"
         onClick={togglePlay}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
@@ -228,7 +228,7 @@ export function PreviewPlayer({
             <img 
               src={poster} 
               alt="Loading" 
-              className="absolute inset-0 w-full h-full object-cover opacity-30 scale-105"
+              className="absolute inset-0 w-full h-full object-cover opacity-30 scale-105 transition-all duration-700"
             />
           )}
           <div className="relative flex flex-col items-center z-20">

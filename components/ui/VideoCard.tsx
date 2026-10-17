@@ -45,7 +45,7 @@ export function VideoCard({
               unoptimized={true}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               loading="lazy"
-              className="object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
+              className="object-cover opacity-90 group-hover:opacity-100 scale-100 group-hover:scale-105 transition-all duration-500"
             />
           ) : (
             <video 
@@ -53,7 +53,7 @@ export function VideoCard({
               preload="none"
               muted
               playsInline
-              className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500 bg-zinc-900"
+              className="w-full h-full object-cover opacity-90 group-hover:opacity-100 scale-100 group-hover:scale-105 transition-all duration-500 bg-zinc-900"
             />
           )}
           

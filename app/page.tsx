@@ -1,195 +1,282 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import { Play, Sparkles, Lock, Flame, ShieldCheck, Tag, RefreshCw, Film } from "lucide-react";
-import { VideoCard } from "@/components/ui/VideoCard";
-
+import { Film } from "lucide-react";
+import { HeroBanner } from "@/components/ui/HeroBanner";
+import { PackageCard } from "@/components/ui/PackageCard";
+import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
 import { createClient } from "@/services/supabase/client";
+import { type Pacote } from "@/lib/whatsapp";
+
+interface PacoteItem {
+  pacote: Pacote;
+  imagemUrl?: string;
+  videoUrl?: string;
+  badge?: string;
+  badgeCor?: "vermelho" | "verde" | "roxo" | "amarelo";
+  vendasHoje?: number;
+  vagasRestantes?: number;
+  destaque?: boolean;
+}
+
+// ─── PACOTES PRINCIPAIS BASEADOS NO DESIGN DA REFERÊNCIA ─────────────
+const PACOTES_BASE: PacoteItem[] = [
+  {
+    pacote: {
+      nome: "COLEÇÃO PREMIUM VIP",
+      quantidadeVideos: 54,
+      tamanho: "22 GB",
+      qualidade: "FULL HD",
+      preco: 30,
+      precoOriginal: 60,
+      descricao: "Os melhores conteúdos selecionados com qualidade máxima.",
+    },
+    badge: "HOT",
+    badgeCor: "vermelho",
+    vendasHoje: 54,
+    vagasRestantes: 64,
+    destaque: false,
+    imagemUrl: "https://gvcliwdhgqpbrbvehpsa.supabase.co/storage/v1/object/public/videos/1788193573944-thumb.jpg",
+    videoUrl: "https://gvcliwdhgqpbrbvehpsa.supabase.co/storage/v1/object/public/videos/1788193495732-video.mp4",
+  },
+  {
+    pacote: {
+      nome: "NOVOS CONTEÚDOS",
+      quantidadeVideos: 29,
+      tamanho: "20 GB",
+      qualidade: "HD",
+      preco: 45,
+      precoOriginal: 90,
+      descricao: "Os melhores vídeos recentemente adicionados à plataforma.",
+    },
+    badge: "NOVO",
+    badgeCor: "verde",
+    vendasHoje: 29,
+    vagasRestantes: 76,
+    imagemUrl: "https://gvcliwdhgqpbrbvehpsa.supabase.co/storage/v1/object/public/videos/1788193834400-thumb.jpg",
+    videoUrl: "https://gvcliwdhgqpbrbvehpsa.supabase.co/storage/v1/object/public/videos/1788193791366-video.mp4",
+  },
+  {
+    pacote: {
+      nome: "COLEÇÃO EXCLUSIVA",
+      quantidadeVideos: 43,
+      tamanho: "6 GB",
+      qualidade: "FULL HD",
+      preco: 99,
+      precoOriginal: 200,
+      descricao: "Acesso VIP a conteúdos exclusivos disponíveis apenas nesta coleção.",
+    },
+    badge: "EXCLUSIVO",
+    badgeCor: "roxo",
+    vendasHoje: 43,
+    vagasRestantes: 346,
+    imagemUrl: "https://gvcliwdhgqpbrbvehpsa.supabase.co/storage/v1/object/public/videos/1788194099980-thumb.jpg",
+    videoUrl: "https://gvcliwdhgqpbrbvehpsa.supabase.co/storage/v1/object/public/videos/1788194025070-video.mp4",
+  },
+  {
+    pacote: {
+      nome: "PREMIUM CP",
+      quantidadeVideos: 17,
+      tamanho: "9 GB",
+      qualidade: "4K",
+      preco: 50,
+      precoOriginal: 100,
+      descricao: "Conteúdo premium de máxima qualidade para os clientes mais exigentes.",
+    },
+    badge: "PREMIUM",
+    badgeCor: "amarelo",
+    vendasHoje: 17,
+    vagasRestantes: 97,
+    destaque: true, // Card roxo especial com borda neon idêntico à referência!
+  },
+  {
+    pacote: {
+      nome: "MEGA COLEÇÃO ALL CP",
+      quantidadeVideos: 120,
+      tamanho: "45 GB",
+      qualidade: "FULL HD",
+      preco: 75,
+      precoOriginal: 180,
+      descricao: "O maior pacote disponível com mais de 120 conteúdos completos.",
+    },
+    badge: "MAIS VENDIDO",
+    badgeCor: "vermelho",
+    vendasHoje: 89,
+    vagasRestantes: 55,
+    imagemUrl: "https://gvcliwdhgqpbrbvehpsa.supabase.co/storage/v1/object/public/videos/1788194314781-thumb.jpg",
+    videoUrl: "https://gvcliwdhgqpbrbvehpsa.supabase.co/storage/v1/object/public/videos/1788194264495-video.mp4",
+  },
+  {
+    pacote: {
+      nome: "PACOTE TEENS VIP",
+      quantidadeVideos: 38,
+      tamanho: "12 GB",
+      qualidade: "HD",
+      preco: 35,
+      precoOriginal: 70,
+      descricao: "Coleção especial de conteúdo jovem e moderno.",
+    },
+    badge: "POPULAR",
+    badgeCor: "verde",
+    vendasHoje: 38,
+    vagasRestantes: 120,
+    imagemUrl: "https://gvcliwdhgqpbrbvehpsa.supabase.co/storage/v1/object/public/videos/1788195998563-thumb.jpg",
+    videoUrl: "https://gvcliwdhgqpbrbvehpsa.supabase.co/storage/v1/object/public/videos/1788195968462-video.mp4",
+  },
+  {
+    pacote: {
+      nome: "PACK SELEÇÃO BELLE",
+      quantidadeVideos: 22,
+      tamanho: "8 GB",
+      qualidade: "FULL HD",
+      preco: 40,
+      precoOriginal: 80,
+      descricao: "Seleção especial com os momentos mais marcantes.",
+    },
+    badge: "HOT",
+    badgeCor: "vermelho",
+    vendasHoje: 22,
+    vagasRestantes: 88,
+    imagemUrl: "https://gvcliwdhgqpbrbvehpsa.supabase.co/storage/v1/object/public/videos/1788196302796-thumb.jpg",
+    videoUrl: "https://gvcliwdhgqpbrbvehpsa.supabase.co/storage/v1/object/public/videos/1788196177986-video.mp4",
+  },
+  {
+    pacote: {
+      nome: "BLACKMAIL PACK",
+      quantidadeVideos: 31,
+      tamanho: "14 GB",
+      qualidade: "FULL HD",
+      preco: 55,
+      precoOriginal: 110,
+      descricao: "Coleção intensa e exclusiva para os amantes do género.",
+    },
+    badge: "NOVO",
+    badgeCor: "roxo",
+    vendasHoje: 31,
+    vagasRestantes: 50,
+    imagemUrl: "https://gvcliwdhgqpbrbvehpsa.supabase.co/storage/v1/object/public/videos/1788350179290-thumb.jpg",
+    videoUrl: "https://gvcliwdhgqpbrbvehpsa.supabase.co/storage/v1/object/public/videos/1788350129863-video.mp4",
+  },
+];
 
 export default function HomePage() {
+  const [pacotes, setPacotes] = useState<PacoteItem[]>(PACOTES_BASE);
   const [activeCategory, setActiveCategory] = useState<string>("Todos");
-  const [currentPage, setCurrentPage] = useState<number>(1);
 
-  const [categories, setCategories] = useState<string[]>(["Todos"]);
-  const [videos, setVideos] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const supabase = createClient();
-
+  // Carregar pacotes publicados do Supabase dinamicamente
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchDbPackages = async () => {
       try {
-        // Buscar Vídeos
-        const { data: videoData } = await supabase
+        const supabase = createClient();
+        const { data } = await supabase
           .from("videos")
           .select("*, category:categories(name)")
           .eq("status", "published")
           .order("created_at", { ascending: false });
-        
-        if (videoData) {
-          setVideos(videoData);
-        }
 
-        // Buscar Categorias Ativas do Banco de Dados
-        const { data: catData } = await supabase
-          .from("categories")
-          .select("name")
-          .eq("status", "active");
+        if (data && data.length > 0) {
+          const dbItems: PacoteItem[] = data.map((v: any) => {
+            let parsed = { text: v.description || "", size: "15 GB", quality: "FULL HD", badge: "HOT" };
+            try {
+              if (v.description && v.description.startsWith("{")) {
+                parsed = { ...parsed, ...JSON.parse(v.description) };
+              }
+            } catch {
+              parsed.text = v.description || "";
+            }
 
-        if (catData) {
-          const catNames = catData.map(c => c.name);
-          setCategories(["Todos", ...catNames]);
+            const badgeCor: "vermelho" | "verde" | "roxo" | "amarelo" =
+              parsed.badge === "NOVO" ? "verde" :
+              parsed.badge === "EXCLUSIVO" ? "roxo" :
+              parsed.badge === "PREMIUM" ? "amarelo" : "vermelho";
+
+            return {
+              pacote: {
+                nome: v.title,
+                quantidadeVideos: v.duration || 50,
+                tamanho: parsed.size || "15 GB",
+                qualidade: parsed.quality || "FULL HD",
+                preco: v.price || 30,
+                precoOriginal: v.rental_price || (v.price ? v.price * 2 : 60),
+                descricao: parsed.text || "Conteúdo exclusivo da coleção.",
+              },
+              badge: parsed.badge || "HOT",
+              badgeCor,
+              vendasHoje: 35,
+              vagasRestantes: 64,
+              imagemUrl: v.thumbnail_url,
+              videoUrl: v.video_url,
+            };
+          });
+
+          // Coloca os pacotes do banco de dados na frente
+          setPacotes((prev) => {
+            const nomesExistentes = new Set(dbItems.map((d) => d.pacote.nome.toLowerCase()));
+            const unicos = prev.filter((p) => !nomesExistentes.has(p.pacote.nome.toLowerCase()));
+            return [...dbItems, ...unicos];
+          });
         }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setIsLoading(false);
+      } catch {
+        // Fallback silencioso para pacotes base
       }
     };
-    fetchData();
+
+    fetchDbPackages();
   }, []);
 
-  const filteredVideos = activeCategory === "Todos" 
-    ? videos 
-    : videos.filter(v => v.category?.name === activeCategory || v.category === activeCategory);
-
-  // Lógica de Paginação
-  const ITEMS_PER_PAGE = 8;
-  const totalPages = Math.max(1, Math.ceil(filteredVideos.length / ITEMS_PER_PAGE));
-  const paginatedVideos = filteredVideos.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-
   return (
-    <div className="w-full flex flex-col pb-16 pt-2 space-y-10 select-none">
-      
+    <div className="w-full min-h-screen bg-[#08080c] flex flex-col pb-24 select-none">
 
+      {/* ─── 1. HERO BANNER (IDENTICO À REFERÊNCIA) ─── */}
+      <HeroBanner />
 
-      {/* 1. GRELHA E FILTROS DO CATÁLOGO DE VÍDEOS */}
-      <div className="max-w-7xl mx-auto px-6 md:px-8 w-full space-y-6 mt-4">
-        
-        {/* Cabeçalho da Seção com Filtros de Categoria */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800/80 pb-4">
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-              Vídeos Recentes
-            </h2>
-            <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">18+</span>
+      {/* ─── 2. ÁREA DE PACOTES (CONTAINER ESPAÇOSO 1520px) ─── */}
+      <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
+
+        {/* Linha de cabeçalho: Filtros sutis à esquerda com scroll no mobile, contador de títulos à direita */}
+        <div className="flex items-center justify-between gap-3 border-b border-zinc-800/60 pb-3">
+          <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none -mx-2 px-2">
+            {["Todos", "🔥 Populares", "⭐ Exclusivos", "💎 Premium"].map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex-shrink-0 ${
+                  activeCategory === cat
+                    ? "bg-purple-600/30 border border-purple-500 text-purple-200"
+                    : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
           </div>
-          
-          {/* Pílulas de Categorias (Estilo Pílula Arredondada Premium) */}
-          <div className="flex items-center gap-3 overflow-x-auto pb-4 md:pb-0 scroll-row -mx-6 px-6 md:mx-0 md:px-0">
-            {categories.map((cat) => {
-              // Ícones baseados no nome da categoria para manter um visual bonito
-              let icon = "🎬 ";
-              if (cat === "Todos") icon = "🔥 ";
-              else if (cat.includes("VIP") || cat.includes("Exclusivo")) icon = "⭐ ";
-              else if (cat.includes("Lançamento") || cat.includes("Novo")) icon = "🚀 ";
-              else if (cat.includes("Popular") || cat.includes("Viral") || cat.includes("Visto")) icon = "⚡ ";
 
-              return (
-                <button
-                  key={cat}
-                  onClick={() => {
-                    setActiveCategory(cat);
-                    setCurrentPage(1); // Reset page on category change
-                  }}
-                  className={`px-6 py-3 md:py-2.5 rounded-full text-[13px] md:text-xs font-bold whitespace-nowrap transition-all duration-300 border flex-shrink-0 ${
-                    activeCategory === cat
-                      ? "bg-white border-white text-zinc-950 shadow-[0_4px_15px_rgba(255,255,255,0.15)] scale-105"
-                      : "bg-[#111113] border-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-800"
-                  }`}
-                >
-                  {icon}{cat}
-                </button>
-              );
-            })}
-          </div>
+          {/* Contador estilo "32 titles" da referência */}
+          <span className="text-zinc-500 text-xs font-semibold whitespace-nowrap flex-shrink-0">
+            {pacotes.length} titles
+          </span>
         </div>
 
-        {/* Grelha Principal de Cards de Vídeos */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {isLoading ? (
-            Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="flex flex-col gap-3 w-full animate-pulse">
-                <div className="w-full aspect-video bg-zinc-900 rounded-xl" />
-                <div className="flex flex-col gap-2 px-1">
-                  <div className="h-4 bg-zinc-800 rounded-md w-3/4" />
-                  <div className="h-3 bg-zinc-900 rounded-md w-1/2" />
-                </div>
-              </div>
-            ))
-          ) : (
-            paginatedVideos.map((video) => {
-              return (
-                <VideoCard 
-                  key={`video-${video.id}`}
-                  id={video.id}
-                  title={video.title}
-                  description={video.description}
-                  category={video.category?.name || "Sem Categoria"}
-                  duration={`${Math.floor((video.duration || 15) / 60)}:${((video.duration || 15) % 60).toString().padStart(2, '0')}`}
-                  price={video.price}
-                  rentalPrice={video.rental_price}
-                  imageUrl={video.thumbnail_url}
-                  videoUrl={video.video_url}
-                  views="0"
-                />
-              );
-            })
-          )}
+        {/* ─── GRELHA ESPAÇOSA DE CARDS (3 A 4 COLUNAS COM ESPAÇAMENTO RESPIRÁVEL) ─── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
+          {pacotes.map((item, idx) => (
+            <PackageCard
+              key={idx}
+              pacote={item.pacote}
+              imagemUrl={item.imagemUrl}
+              videoUrl={item.videoUrl}
+              badge={item.badge}
+              badgeCor={item.badgeCor}
+              vendasHoje={item.vendasHoje}
+              vagasRestantes={item.vagasRestantes}
+              destaque={item.destaque}
+            />
+          ))}
         </div>
-
-        {/* Empty State */}
-        {!isLoading && filteredVideos.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-            <div className="w-16 h-16 bg-zinc-900 rounded-full flex items-center justify-center">
-              <Film className="w-8 h-8 text-zinc-600" />
-            </div>
-            <h3 className="text-xl font-bold text-white">Nenhum vídeo encontrado</h3>
-            <p className="text-zinc-500 max-w-md">Você ainda não tem vídeos nesta categoria.</p>
-          </div>
-        )}
-
-        {/* Paginação */}
-        {!isLoading && totalPages > 1 && (
-          <div className="pt-10 pb-6 flex justify-center w-full overflow-hidden">
-            <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2 max-w-full">
-              <button 
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="flex items-center justify-center h-8 sm:h-10 px-2 sm:px-3 bg-zinc-900 border border-zinc-800 rounded text-xs sm:text-sm text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Ant.
-              </button>
-              
-              {Array.from({ length: totalPages }).map((_, idx) => {
-                const page = idx + 1;
-                return (
-                  <button 
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`flex items-center justify-center w-8 sm:w-10 h-8 sm:h-10 rounded text-xs sm:text-sm font-bold transition-colors ${
-                      currentPage === page 
-                        ? "bg-red-600 text-white border border-red-600" 
-                        : "bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                )
-              })}
-
-              <button 
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-                className="flex items-center justify-center h-8 sm:h-10 px-2 sm:px-3 bg-zinc-900 border border-zinc-800 rounded text-xs sm:text-sm text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Próx.
-              </button>
-            </div>
-          </div>
-        )}
-
       </div>
+
+      {/* ─── 3. BOTÃO FLUTUANTE (IDÊNTICO AO "DM ME FOR MORE") ─── */}
+      <WhatsAppButton />
     </div>
   );
 }

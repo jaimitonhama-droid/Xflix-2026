@@ -1,24 +1,39 @@
 {
-  "name": "Xflix",
+  "name": "Xflix — Catálogo VIP & Loja",
   "short_name": "Xflix",
-  "description": "A melhor plataforma de vídeos exclusivos",
+  "description": "Plataforma de pacotes e conteúdos VIP exclusivos",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#050505",
-  "theme_color": "#050505",
-  "orientation": "portrait-primary",
+  "background_color": "#08080c",
+  "theme_color": "#08080c",
+  "orientation": "portrait",
+  "lang": "pt",
+  "categories": ["entertainment", "video", "shopping"],
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

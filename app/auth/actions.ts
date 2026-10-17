@@ -14,7 +14,10 @@ export async function login(prevState: any, formData: FormData) {
     return { error: "Preencha todos os campos." };
   }
 
-  if (email === "jaimitonhama@gmail.com" && password === "92357694Cb") {
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  if (adminEmail && adminPassword && email === adminEmail && password === adminPassword) {
     redirect("/admin");
   }
 

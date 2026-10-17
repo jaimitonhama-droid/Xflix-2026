@@ -9,8 +9,8 @@ export function Footer() {
   if (pathname.startsWith("/admin") || pathname === "/login" || pathname === "/register") return null;
 
   return (
-    <footer className="w-full bg-[#0d0d10] border-t border-zinc-800/80 mt-20 select-none">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+    <footer className="w-full bg-[#08080c] border-t border-zinc-800/80 mt-20 select-none">
+      <div className="max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
           
           {/* Marca e Pagamentos */}
