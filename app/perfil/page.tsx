@@ -397,7 +397,7 @@ function PagamentosTab({ userId }: { userId: string }) {
               <p className="text-xs text-zinc-600 mt-0.5">{formatDate(o.created_at)}</p>
             </div>
             <div className="flex-shrink-0 flex flex-col items-end gap-1">
-              <span className="text-white font-bold text-sm">{o.amount.toFixed(2)} MT</span>
+              <span className="text-white font-bold text-sm">{(o.amount ?? 0).toFixed(2)} MT</span>
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${s.cls}`}>{s.label}</span>
             </div>
           </div>
@@ -427,7 +427,7 @@ function SegurancaTab({ user, router }: any) {
     try {
       const supabase = createClient();
       const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: profile.email,
+        email: user?.email || "",
         password: currentPw
       });
       if (signInError) throw new Error("wrong-password");

@@ -15,7 +15,7 @@ type PreviewPlayerProps = {
 export function PreviewPlayer({
   src,
   poster,
-  limitSeconds = 5,
+  limitSeconds = 10,
   expiresAt,
   isUnlocked = false,
   onLimitReached,

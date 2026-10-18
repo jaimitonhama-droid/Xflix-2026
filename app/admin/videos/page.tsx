@@ -445,15 +445,15 @@ export default function AdminVideosPage() {
                   </p>
                 )}
 
-                {/* Tags */}
-                <div className="flex items-center gap-1.5 pt-1">
-                  <span className="bg-[#171622] text-zinc-400 text-[10px] font-bold px-2 py-0.5 rounded border border-zinc-800">
-                    {pkg.quantityVideos}+ VÍDEOS
+                {/* Tags de Informação */}
+                <div className="flex items-center gap-2 pt-1">
+                  <span className="bg-[#1c182c] text-purple-200 text-xs font-black px-2.5 py-1 rounded-md border border-purple-500/40">
+                    {pkg.quantityVideos} VÍDEOS
                   </span>
-                  <span className="bg-[#171622] text-zinc-400 text-[10px] font-bold px-2 py-0.5 rounded border border-zinc-800">
+                  <span className="bg-[#181822] text-zinc-100 text-xs font-bold px-2.5 py-1 rounded-md border border-zinc-700/80">
                     {pkg.size}
                   </span>
-                  <span className="bg-[#171622] text-zinc-400 text-[10px] font-bold px-2 py-0.5 rounded border border-zinc-800">
+                  <span className="bg-[#0f1f2e] text-cyan-200 text-xs font-bold px-2.5 py-1 rounded-md border border-cyan-500/40">
                     {pkg.quality}
                   </span>
                 </div>

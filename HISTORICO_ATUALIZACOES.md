@@ -28,8 +28,10 @@
   - Layout widescreen moderno com proporção 16:9 para todas as capas de pacotes.
   - Fim do desfoque artificial: as capas e prévias agora são 100% nítidas.
   - **Capas Limpas:** Removido o título que cobria o centro da imagem. A foto agora é vista perfeitamente e o título é exibido logo abaixo.
+  - **Tags e Contagem de Vídeos Nítidas:** Aumentado o tamanho da fonte e contraste das tags (`50 VÍDEOS`, tamanho e qualidade). Removido o sinal de mais (`+`) para que mostre exatamente a quantidade exata de vídeos (ex: `50 VÍDEOS` em vez de `50+`).
 - **Botões 50% / 50% Ergonômicos:**
   - Botão **PRÉVIA** (com ícone de olho) e botão **COMPRAR** (com ícone oficial do WhatsApp) perfeitamente divididos em 50% de largura cada.
+  - **Player de Prévia com Trava de 10 Segundos:** Quando o cliente clica em "Prévia", o vídeo teaser é reproduzido por exatamente **10 segundos** com cronômetro em tempo real (`00:07 / 00:10`), botão para ativar/mutar áudio e barra de progresso. Aos 10 segundos, o vídeo trava automaticamente e exibe o popup com cadeado convidando para comprar o pacote completo no WhatsApp.
   - Altura de toque confortável para celular (`h-11` / `h-12`).
   - Preço atual em destaque e cálculo automático de desconto (ex: `-50% OFF`).
 - **Hero Banner Principal (`HeroBanner.tsx`):**

@@ -5,3 +5,4 @@
 export * from "./video";
 export * from "./category";
 export * from "./user";
+export * from "./order";
