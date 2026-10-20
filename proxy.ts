@@ -15,9 +15,10 @@ export async function proxy(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
     process.env.NEXT_PUBLIC_SUPABASE_URL.startsWith("http")
       ? process.env.NEXT_PUBLIC_SUPABASE_URL
-      : "https://placeholder.supabase.co";
+      : "https://gvcliwdhgqpbrbvehpsa.supabase.co";
   const key =
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-anon-key";
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2Y2xpd2RoZ3FwYnJidmVocHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyMzIwMDYsImV4cCI6MjA5ODgwODAwNn0.VssLQPC7jjkGPgHkHdn3_tYYfHtljDw-A2Kfp6pEqLA";
 
   const supabase = createServerClient(
     url,

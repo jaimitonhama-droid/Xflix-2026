@@ -310,7 +310,10 @@ export default function LoginPage() {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      autoComplete="off"
+                      autoComplete="email"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
                       required
                       className="block w-full h-11 sm:h-12 pl-4 sm:pl-5 pr-4 border border-zinc-800/90 rounded-2xl bg-[#18181b]/90 text-white text-xs sm:text-sm placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-medium transition-all"
                     />

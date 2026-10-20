@@ -2,7 +2,7 @@
 // XFLIX — Service Worker PWA (Offline & Fast Cache)
 // ============================================================
 
-const CACHE_NAME = 'xflix-pwa-v2';
+const CACHE_NAME = 'xflix-pwa-v3';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',

@@ -7,17 +7,32 @@ import { createClient } from "@/services/supabase/server";
 export async function login(prevState: any, formData: FormData) {
   const supabase = await createClient();
 
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+  const rawEmail = formData.get("email") as string;
+  const rawPassword = formData.get("password") as string;
 
-  if (!email || !password) {
+  if (!rawEmail || !rawPassword) {
     return { error: "Preencha todos os campos." };
   }
 
-  const adminEmail = process.env.ADMIN_EMAIL;
-  const adminPassword = process.env.ADMIN_PASSWORD;
+  const email = rawEmail.trim().toLowerCase();
+  const password = rawPassword.trim();
 
-  if (adminEmail && adminPassword && email === adminEmail && password === adminPassword) {
+  // Credenciais Master do Administrador (com suporte a variáveis de ambiente e fallback padrão)
+  const adminEmail = (process.env.ADMIN_EMAIL || "jaimitonhama@gmail.com").trim().toLowerCase();
+  const adminPassword = (process.env.ADMIN_PASSWORD || "92357694Cb").trim();
+
+  if (email === adminEmail && password === adminPassword) {
+    // Tenta autenticar silenciosamente no Supabase caso a conta exista lá também
+    try {
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+    } catch {
+      // Continua mesmo se não houver conta no Supabase para permitir acesso admin master
+    }
+
+    revalidatePath("/", "layout");
     redirect("/admin");
   }
 

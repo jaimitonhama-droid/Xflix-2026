@@ -11,7 +11,7 @@ import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
 import { InstallPwaPrompt } from "@/components/ui/InstallPwaPrompt";
 
 export const metadata: Metadata = {
-  title: "Xflix — Catálogo VIP & Loja",
+  title: "Xflix",
   description: "A sua plataforma exclusiva de pacotes e conteúdos VIP.",
   manifest: "/manifest.json",
   appleWebApp: {
