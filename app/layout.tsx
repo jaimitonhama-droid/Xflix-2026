@@ -56,12 +56,20 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(
-                    function(registration) { console.log('SW registered'); },
-                    function(err) { console.log('SW failed', err); }
-                  );
-                });
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                  navigator.serviceWorker.getRegistrations().then(function(regs) {
+                    for (let r of regs) r.unregister();
+                  });
+                  if ('caches' in window) {
+                    caches.keys().then(function(keys) {
+                      for (let k of keys) caches.delete(k);
+                    });
+                  }
+                } else {
+                  window.addEventListener('load', function() {
+                    navigator.serviceWorker.register('/sw.js');
+                  });
+                }
               }
             `,
           }}

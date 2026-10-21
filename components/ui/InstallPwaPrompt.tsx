@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Download, X } from "lucide-react";
 
 export function InstallPwaPrompt() {
+  const pathname = usePathname();
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isDismissed, setIsDismissed] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
@@ -36,7 +38,7 @@ export function InstallPwaPrompt() {
     }
   };
 
-  if (isStandalone || isDismissed || !deferredPrompt) {
+  if (!pathname || pathname === "/" || isStandalone || isDismissed || !deferredPrompt) {
     return null;
   }
 

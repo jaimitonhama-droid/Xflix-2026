@@ -1,0 +1,22 @@
+{
+  "coverUrl": "/uploads/cover-1792542276079.jpeg",
+  "avatarUrl": "/uploads/avatar-1792542276090.jpeg",
+  "name": "carla reis",
+  "isVerified": true,
+  "handle": "carla ",
+  "statusText": "Disponível agora",
+  "bioShort": "tudo que voce precisa ver",
+  "bioFull": "",
+  "buttonText": "quentes",
+  "buttonBadge": "GRATUITO",
+  "buttonColor": "#00aff0",
+  "photosCount": "166",
+  "videosCount": "85",
+  "livesCount": "21",
+  "likesCount": "66.2K",
+  "tabPosts": "165 POSTAGENS",
+  "tabMedia": "251 MÍDIA",
+  "lockTitle": "Conteúdo exclusivo protegido",
+  "lockSubtitle": "Toque no botão EXCLUSIVOS para liberar todos os vídeos",
+  "teaserVideoUrl": "https://gvcliwdhgqpbrbvehpsa.supabase.co/storage/v1/object/public/videos/1788193495732-video.mp4"
+}

@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Film, CreditCard, BarChart3, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Film, CreditCard, BarChart3, Settings, LogOut, Sparkles } from "lucide-react";
 
 export function AdminSidebar({ isOpen = false, onClose = () => {} }: { isOpen?: boolean, onClose?: () => void }) {
   const pathname = usePathname();
   const links = [
     { name: "Início", href: "/admin", icon: LayoutDashboard },
+    { name: "Página Inicial", href: "/admin/landing", icon: Sparkles },
     { name: "Vídeos", href: "/admin/videos", icon: Film },
     { name: "Transações", href: "/admin/transactions", icon: CreditCard },
     { name: "Usuários", href: "/admin/users", icon: BarChart3 },

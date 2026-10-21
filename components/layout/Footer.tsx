@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 
 export function Footer() {
   const pathname = usePathname();
-  if (pathname.startsWith("/admin") || pathname === "/login" || pathname === "/register") return null;
+  if (!pathname || pathname === "/" || pathname === "" || pathname.startsWith("/admin") || pathname === "/login" || pathname === "/register") return null;
 
   return (
     <footer className="w-full bg-[#08080c] border-t border-zinc-800/80 mt-20 select-none">
@@ -15,7 +15,7 @@ export function Footer() {
           
           {/* Marca e Pagamentos */}
           <div className="space-y-4">
-            <Link href="/" className="flex items-center gap-0.5">
+            <Link href="/videos" className="flex items-center gap-0.5">
               <span className="text-2xl font-black tracking-tighter text-white">X</span>
               <span className="text-2xl font-black tracking-tighter text-red-600">FLIX</span>
               <span className="ml-2 bg-red-600/20 text-red-500 text-[10px] font-black px-1.5 py-0.5 rounded border border-red-500/30">18+</span>

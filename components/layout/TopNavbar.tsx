@@ -42,7 +42,7 @@ export function TopNavbar() {
     };
   }, []);
 
-  if (pathname.startsWith("/admin") || pathname === "/login" || pathname === "/register") {
+  if (!pathname || pathname === "/" || pathname === "" || pathname.startsWith("/admin") || pathname === "/login" || pathname === "/register") {
     return null;
   }
 
@@ -60,7 +60,7 @@ export function TopNavbar() {
         <div className="max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2 group">
+            <Link href="/videos" className="flex items-center gap-2 group">
               <span className="text-xl sm:text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-300 group-hover:opacity-90 transition-opacity">
                 VIP CONTENT
               </span>
@@ -136,7 +136,7 @@ export function TopNavbar() {
       >
         {/* Topo do Drawer */}
         <div className="flex items-center justify-between pb-5 border-b border-zinc-800/80 mb-5">
-          <Link href="/" onClick={() => setIsMobileOpen(false)} className="flex items-center gap-2">
+          <Link href="/videos" onClick={() => setIsMobileOpen(false)} className="flex items-center gap-2">
             <span className="text-lg font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
               VIP CONTENT
             </span>
@@ -153,12 +153,20 @@ export function TopNavbar() {
         {/* Links Principais */}
         <div className="flex flex-col gap-2">
           <Link
-            href="/"
+            href="/videos"
             onClick={() => setIsMobileOpen(false)}
             className="flex items-center gap-3 px-3.5 py-3 rounded-xl bg-zinc-900/60 hover:bg-zinc-800 text-sm font-bold text-zinc-200 transition-all border border-zinc-800/60"
           >
             <Film className="w-4 h-4 text-purple-400" />
             <span>Catálogo VIP</span>
+          </Link>
+          <Link
+            href="/"
+            onClick={() => setIsMobileOpen(false)}
+            className="flex items-center gap-3 px-3.5 py-3 rounded-xl bg-zinc-900/40 hover:bg-zinc-800 text-sm font-semibold text-zinc-300 transition-all border border-zinc-800/40"
+          >
+            <span className="text-base">👑</span>
+            <span>Perfil da Modelo</span>
           </Link>
           <a
             href={gerarLinkSuporte()}
