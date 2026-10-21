@@ -98,12 +98,7 @@ export function HeroBanner() {
 
           {/* Badge DESTAQUE no canto superior esquerdo */}
           <div className="absolute top-3 left-3 bg-red-600 text-white font-black text-[10px] sm:text-xs px-2.5 py-1 rounded shadow">
-            HOT DESTAQUE
-          </div>
-
-          {/* Vagas restantes no canto inferior direito */}
-          <div className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-sm text-zinc-300 text-[10px] sm:text-xs font-bold px-2.5 py-1 rounded">
-            13 restantes
+            DESTAQUE
           </div>
         </div>
 

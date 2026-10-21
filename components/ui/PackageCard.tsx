@@ -126,17 +126,10 @@ export function PackageCard({
             </div>
           )}
 
-          {/* Badge superior esquerdo (HOT, NOVO, etc.) */}
-          {badge && (
+          {/* Badge superior esquerdo (NOVO, EXCLUSIVO, etc. - exceto HOT) */}
+          {badge && badge.toUpperCase() !== "HOT" && (
             <div className={`absolute top-2.5 left-2.5 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider shadow ${coresBadge[badgeCor]}`}>
               {badge}
-            </div>
-          )}
-
-          {/* Vagas restantes no canto inferior direito da imagem */}
-          {vagasRestantes !== undefined && (
-            <div className="absolute bottom-2.5 right-2.5 bg-black/75 backdrop-blur-sm text-zinc-300 text-[10px] font-semibold px-2 py-0.5 rounded">
-              {vagasRestantes} vagas
             </div>
           )}
         </div>
@@ -154,11 +147,6 @@ export function PackageCard({
               </span>
             )}
           </div>
-
-          {/* Linha 2: Quantidade de compras (social proof) */}
-          <p className="text-zinc-400 text-xs font-medium">
-            {vendasHoje} compras hoje
-          </p>
 
           {/* Linha 3: Descrição curta */}
           {pacote.descricao && (
