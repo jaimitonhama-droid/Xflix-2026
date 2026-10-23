@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Search, X, Film, TrendingUp } from "lucide-react";
+import { Search, X, TrendingUp } from "lucide-react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 // Mock data para sugestões
 const MOCK_SUGGESTIONS = [
@@ -16,23 +15,14 @@ const MOCK_SUGGESTIONS = [
 export function SearchBar() {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<string[]>([]);
   const router = useRouter();
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // Debounce e busca falsa de sugestões
-  useEffect(() => {
-    if (query.trim().length === 0) {
-      setSuggestions([]);
-      return;
-    }
-    const timer = setTimeout(() => {
-      // Simula busca em API
-      const filtered = MOCK_SUGGESTIONS.filter(s => s.toLowerCase().includes(query.toLowerCase()));
-      setSuggestions(filtered);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [query]);
+  // Sugestões derivadas da busca
+  const suggestions =
+    query.trim().length === 0
+      ? []
+      : MOCK_SUGGESTIONS.filter((s) => s.toLowerCase().includes(query.toLowerCase()));
 
   // Fecha busca ao clicar fora
   useEffect(() => {

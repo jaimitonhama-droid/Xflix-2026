@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Play, Eye, ThumbsUp, MessageSquare } from "lucide-react";
+import { Play } from "lucide-react";
 
 type VideoCardProps = {
   id: string | number;
@@ -25,9 +25,6 @@ export function VideoCard({
   description,
   imageUrl, 
   videoUrl,
-  views = "0",
-  likes = "0",
-  comments = "0",
 }: VideoCardProps) {
   
   const href = `/video/${id}`;

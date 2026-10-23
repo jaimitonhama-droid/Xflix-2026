@@ -13,11 +13,15 @@ import {
   Play,
   User,
   Image as ImageIcon,
+  X,
 } from "lucide-react";
+import { createClient } from "@/services/supabase/client";
 
 const DEFAULT_VIDEO = "https://gvcliwdhgqpbrbvehpsa.supabase.co/storage/v1/object/public/videos/1788193495732-video.mp4";
 
 export default function AdminLandingPage() {
+  const supabase = createClient();
+
   // Vídeo e Botão
   const [videoUrl, setVideoUrl] = useState(DEFAULT_VIDEO);
   const [buttonText, setButtonText] = useState("QUENTES");
@@ -42,6 +46,7 @@ export default function AdminLandingPage() {
   // Estados gerais
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<string>("");
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   useEffect(() => {
@@ -74,6 +79,9 @@ export default function AdminLandingPage() {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setVideoFile(file);
+      if (videoPreview && videoPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(videoPreview);
+      }
       setVideoPreview(URL.createObjectURL(file));
     }
   };
@@ -82,6 +90,9 @@ export default function AdminLandingPage() {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setCoverFile(file);
+      if (coverPreview && coverPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(coverPreview);
+      }
       setCoverPreview(URL.createObjectURL(file));
     }
   };
@@ -90,6 +101,9 @@ export default function AdminLandingPage() {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setAvatarFile(file);
+      if (avatarPreview && avatarPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(avatarPreview);
+      }
       setAvatarPreview(URL.createObjectURL(file));
     }
   };
@@ -106,50 +120,129 @@ export default function AdminLandingPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
+    setUploadStatus("Iniciando...");
 
     try {
-      const formData = new FormData();
-      if (videoFile) formData.append("videoFile", videoFile);
-      if (coverFile) formData.append("coverFile", coverFile);
-      if (avatarFile) formData.append("avatarFile", avatarFile);
+      let finalVideoUrl = videoUrl;
+      let finalCoverUrl = coverUrl;
+      let finalAvatarUrl = avatarUrl;
 
-      formData.append("teaserVideoUrl", videoUrl);
-      formData.append("buttonText", buttonText);
-      formData.append("name", name);
-      formData.append("handle", handle);
-      formData.append("bioShort", bioShort);
+      // 1. Upload do Vídeo de Demonstração diretamente para o Supabase Storage
+      if (videoFile) {
+        const sizeMb = (videoFile.size / (1024 * 1024)).toFixed(1);
+        setUploadStatus(`Enviando vídeo (${sizeMb} MB)...`);
+        
+        const videoExt = videoFile.name.split(".").pop()?.toLowerCase() || "mp4";
+        const videoFileName = `teaser-${Date.now()}.${videoExt}`;
 
+        const { error: videoError } = await supabase.storage
+          .from("videos")
+          .upload(videoFileName, videoFile, {
+            cacheControl: "3600",
+            contentType: videoFile.type || "video/mp4",
+            upsert: true,
+          });
+
+        if (videoError) {
+          throw new Error("Erro no upload do vídeo para o Supabase: " + videoError.message);
+        }
+
+        const { data: { publicUrl: newVideoUrl } } = supabase.storage
+          .from("videos")
+          .getPublicUrl(videoFileName);
+
+        finalVideoUrl = newVideoUrl;
+      }
+
+      // 2. Upload da Foto de Capa (se houver novo arquivo)
+      if (coverFile) {
+        setUploadStatus("Enviando foto de capa...");
+        const coverExt = coverFile.name.split(".").pop()?.toLowerCase() || "jpg";
+        const coverFileName = `cover-${Date.now()}.${coverExt}`;
+
+        const { error: coverError } = await supabase.storage
+          .from("videos")
+          .upload(coverFileName, coverFile, {
+            cacheControl: "3600",
+            contentType: coverFile.type || "image/jpeg",
+            upsert: true,
+          });
+
+        if (!coverError) {
+          const { data: { publicUrl: newCoverUrl } } = supabase.storage
+            .from("videos")
+            .getPublicUrl(coverFileName);
+          finalCoverUrl = newCoverUrl;
+        } else {
+          console.warn("Aviso no upload da capa:", coverError);
+        }
+      }
+
+      // 3. Upload da Foto de Avatar (se houver novo arquivo)
+      if (avatarFile) {
+        setUploadStatus("Enviando avatar...");
+        const avatarExt = avatarFile.name.split(".").pop()?.toLowerCase() || "png";
+        const avatarFileName = `avatar-${Date.now()}.${avatarExt}`;
+
+        const { error: avatarError } = await supabase.storage
+          .from("videos")
+          .upload(avatarFileName, avatarFile, {
+            cacheControl: "3600",
+            contentType: avatarFile.type || "image/png",
+            upsert: true,
+          });
+
+        if (!avatarError) {
+          const { data: { publicUrl: newAvatarUrl } } = supabase.storage
+            .from("videos")
+            .getPublicUrl(avatarFileName);
+          finalAvatarUrl = newAvatarUrl;
+        } else {
+          console.warn("Aviso no upload do avatar:", avatarError);
+        }
+      }
+
+      // 4. Salvar configurações na base / arquivo JSON de forma limpa e leve
+      setUploadStatus("Salvando configurações...");
       const res = await fetch("/api/admin/landing-page", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          teaserVideoUrl: finalVideoUrl,
+          coverUrl: finalCoverUrl,
+          avatarUrl: finalAvatarUrl,
+          buttonText,
+          name,
+          handle,
+          bioShort,
+        }),
       });
 
       const data = await res.json();
-      if (data.success) {
-        if (data.config.teaserVideoUrl) {
-          setVideoUrl(data.config.teaserVideoUrl);
-          setVideoPreview(data.config.teaserVideoUrl);
-        }
-        if (data.config.coverUrl) {
-          setCoverUrl(data.config.coverUrl);
-          setCoverPreview(data.config.coverUrl);
-        }
-        if (data.config.avatarUrl) {
-          setAvatarUrl(data.config.avatarUrl);
-          setAvatarPreview(data.config.avatarUrl);
-        }
+      if (data.success || !data.error) {
+        setVideoUrl(finalVideoUrl);
+        setVideoPreview(finalVideoUrl);
+        setCoverUrl(finalCoverUrl);
+        setCoverPreview(finalCoverUrl);
+        setAvatarUrl(finalAvatarUrl);
+        setAvatarPreview(finalAvatarUrl);
+
         setVideoFile(null);
         setCoverFile(null);
         setAvatarFile(null);
+
         setSavedSuccess(true);
-        setTimeout(() => setSavedSuccess(false), 3000);
+        setTimeout(() => setSavedSuccess(false), 4000);
       } else {
-        alert("Erro ao salvar: " + (data.error || "Tente novamente."));
+        throw new Error(data.error || "Tente novamente.");
       }
-    } catch (err: any) {
-      alert("Erro ao salvar: " + err.message);
+    } catch (err: unknown) {
+      console.error("Erro ao salvar:", err);
+      const msg = err instanceof Error ? err.message : "Ocorreu um erro desconhecido.";
+      alert("Erro ao salvar: " + msg);
     } finally {
       setIsSaving(false);
+      setUploadStatus("");
     }
   };
 
@@ -233,6 +326,7 @@ export default function AdminLandingPage() {
             }}
           >
             <video
+              key={videoPreview || videoUrl}
               src={videoPreview || videoUrl}
               autoPlay
               loop
@@ -304,12 +398,37 @@ export default function AdminLandingPage() {
 
             <button
               type="button"
+              disabled={isSaving}
               onClick={() => videoInputRef.current?.click()}
-              className="w-full py-3 px-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 rounded-xl text-xs font-bold text-zinc-200 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3 px-4 bg-zinc-900 hover:bg-zinc-800 disabled:opacity-50 border border-zinc-700/80 rounded-xl text-xs font-bold text-zinc-200 transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
               <Upload className="w-4 h-4 text-red-500" />
               <span>Trocar Vídeo do Computador / Celular</span>
             </button>
+
+            {/* Ficheiro selecionado com botão para remover */}
+            {videoFile && (
+              <div className="flex items-center justify-between px-3 py-2 bg-red-950/30 border border-red-800/50 rounded-xl text-xs text-red-300 animate-fade-in">
+                <div className="flex items-center gap-2 truncate">
+                  <VideoIcon className="w-4 h-4 text-red-400 flex-shrink-0" />
+                  <span className="font-semibold truncate">{videoFile.name}</span>
+                  <span className="text-[11px] text-zinc-400 flex-shrink-0">
+                    ({(videoFile.size / (1024 * 1024)).toFixed(1)} MB)
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVideoFile(null);
+                    setVideoPreview(videoUrl);
+                  }}
+                  className="text-zinc-400 hover:text-white p-1 hover:bg-zinc-800 rounded transition-colors"
+                  title="Cancelar vídeo selecionado"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
 
             <div>
               <label className="text-[11px] font-semibold text-zinc-400 block mb-1">
@@ -318,12 +437,14 @@ export default function AdminLandingPage() {
               <input
                 type="text"
                 value={videoUrl}
+                disabled={isSaving}
                 onChange={(e) => {
                   setVideoUrl(e.target.value);
                   setVideoPreview(e.target.value);
+                  setVideoFile(null);
                 }}
                 placeholder="https://exemplo.com/meu-video.mp4"
-                className="w-full bg-zinc-950 border border-zinc-800 hover:border-zinc-700 focus:border-red-500 text-white text-xs rounded-xl px-4 py-2.5 font-mono focus:outline-none transition-colors"
+                className="w-full bg-zinc-950 border border-zinc-800 hover:border-zinc-700 focus:border-red-500 text-white text-xs rounded-xl px-4 py-2.5 font-mono focus:outline-none transition-colors disabled:opacity-50"
               />
             </div>
           </div>
@@ -336,10 +457,11 @@ export default function AdminLandingPage() {
             <input
               type="text"
               value={buttonText}
+              disabled={isSaving}
               onChange={(e) => setButtonText(e.target.value)}
               placeholder="QUENTES"
               required
-              className="w-full bg-zinc-950 border border-zinc-800 hover:border-zinc-700 focus:border-red-500 text-white font-black text-sm rounded-xl px-4 py-3 focus:outline-none uppercase tracking-wider transition-colors"
+              className="w-full bg-zinc-950 border border-zinc-800 hover:border-zinc-700 focus:border-red-500 text-white font-black text-sm rounded-xl px-4 py-3 focus:outline-none uppercase tracking-wider transition-colors disabled:opacity-50"
             />
           </div>
         </div>
@@ -374,12 +496,28 @@ export default function AdminLandingPage() {
               />
               <button
                 type="button"
+                disabled={isSaving}
                 onClick={() => coverInputRef.current?.click()}
-                className="w-full py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg text-xs font-bold text-zinc-300 flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full py-2 bg-zinc-900 hover:bg-zinc-800 disabled:opacity-50 border border-zinc-800 rounded-lg text-xs font-bold text-zinc-300 flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <ImageIcon className="w-3.5 h-3.5 text-zinc-400" />
                 <span>Trocar Capa</span>
               </button>
+              {coverFile && (
+                <div className="flex items-center justify-between px-2.5 py-1 bg-zinc-900 border border-zinc-800 rounded-lg text-[11px] text-zinc-300">
+                  <span className="truncate">{coverFile.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCoverFile(null);
+                      setCoverPreview(coverUrl);
+                    }}
+                    className="text-zinc-500 hover:text-white p-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Foto de Avatar */}
@@ -405,12 +543,28 @@ export default function AdminLandingPage() {
               />
               <button
                 type="button"
+                disabled={isSaving}
                 onClick={() => avatarInputRef.current?.click()}
-                className="w-full py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg text-xs font-bold text-zinc-300 flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full py-2 bg-zinc-900 hover:bg-zinc-800 disabled:opacity-50 border border-zinc-800 rounded-lg text-xs font-bold text-zinc-300 flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <ImageIcon className="w-3.5 h-3.5 text-zinc-400" />
                 <span>Trocar Avatar</span>
               </button>
+              {avatarFile && (
+                <div className="flex items-center justify-between px-2.5 py-1 bg-zinc-900 border border-zinc-800 rounded-lg text-[11px] text-zinc-300">
+                  <span className="truncate">{avatarFile.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAvatarFile(null);
+                      setAvatarPreview(avatarUrl);
+                    }}
+                    className="text-zinc-500 hover:text-white p-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -423,9 +577,10 @@ export default function AdminLandingPage() {
               <input
                 type="text"
                 value={name}
+                disabled={isSaving}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Ex: carla reis"
-                className="w-full bg-zinc-950 border border-zinc-800 hover:border-zinc-700 focus:border-red-500 text-white font-bold text-xs rounded-xl px-3.5 py-2.5 focus:outline-none"
+                className="w-full bg-zinc-950 border border-zinc-800 hover:border-zinc-700 focus:border-red-500 text-white font-bold text-xs rounded-xl px-3.5 py-2.5 focus:outline-none disabled:opacity-50"
               />
             </div>
 
@@ -436,9 +591,10 @@ export default function AdminLandingPage() {
               <input
                 type="text"
                 value={handle}
+                disabled={isSaving}
                 onChange={(e) => setHandle(e.target.value)}
                 placeholder="Ex: @carla"
-                className="w-full bg-zinc-950 border border-zinc-800 hover:border-zinc-700 focus:border-red-500 text-white font-bold text-xs rounded-xl px-3.5 py-2.5 focus:outline-none"
+                className="w-full bg-zinc-950 border border-zinc-800 hover:border-zinc-700 focus:border-red-500 text-white font-bold text-xs rounded-xl px-3.5 py-2.5 focus:outline-none disabled:opacity-50"
               />
             </div>
           </div>
@@ -451,15 +607,16 @@ export default function AdminLandingPage() {
             <input
               type="text"
               value={bioShort}
+              disabled={isSaving}
               onChange={(e) => setBioShort(e.target.value)}
               placeholder="Ex: tudo que você precisa ver"
-              className="w-full bg-zinc-950 border border-zinc-800 hover:border-zinc-700 focus:border-red-500 text-white text-xs rounded-xl px-3.5 py-2.5 focus:outline-none"
+              className="w-full bg-zinc-950 border border-zinc-800 hover:border-zinc-700 focus:border-red-500 text-white text-xs rounded-xl px-3.5 py-2.5 focus:outline-none disabled:opacity-50"
             />
           </div>
         </div>
 
-        {/* ── BOTÃO SALVAR ── */}
-        <div className="pt-4 border-t border-zinc-800/80">
+        {/* ── BOTÃO SALVAR COM STATUS ── */}
+        <div className="pt-4 border-t border-zinc-800/80 space-y-2">
           <button
             type="submit"
             disabled={isSaving}
@@ -468,7 +625,7 @@ export default function AdminLandingPage() {
             {isSaving ? (
               <>
                 <RefreshCw className="w-5 h-5 animate-spin" />
-                <span>Salvando...</span>
+                <span>{uploadStatus || "Salvando..."}</span>
               </>
             ) : (
               <>

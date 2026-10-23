@@ -17,10 +17,14 @@ export async function POST(req: Request) {
       const userId = parts?.[1];
 
       if (userId) {
-        // Inicializar Supabase Admin (para ter privilégios de atualizar a tabela)
+        const supabaseKey =
+          process.env.SUPABASE_SERVICE_ROLE_KEY ||
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2Y2xpd2RoZ3FwYnJidmVocHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyMzIwMDYsImV4cCI6MjA5ODgwODAwNn0.VssLQPC7jjkGPgHkHdn3_tYYfHtljDw-A2Kfp6pEqLA";
+
         const supabaseAdmin = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!
+          process.env.NEXT_PUBLIC_SUPABASE_URL || "https://gvcliwdhgqpbrbvehpsa.supabase.co",
+          supabaseKey
         );
 
         // Calcula a data de expiração para 7 dias no futuro

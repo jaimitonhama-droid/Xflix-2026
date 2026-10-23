@@ -19,10 +19,14 @@ export async function POST(req: Request) {
     }
 
     // Como Webhooks rodam no servidor de fundo, usamos o Supabase Client normal
-    // com a Service Role Key para ignorar RLS temporariamente e atualizar a base.
+    const supabaseKey =
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2Y2xpd2RoZ3FwYnJidmVocHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyMzIwMDYsImV4cCI6MjA5ODgwODAwNn0.VssLQPC7jjkGPgHkHdn3_tYYfHtljDw-A2Kfp6pEqLA";
+
     const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY! // IMPORTANTE: Precisará adicionar essa chave no env para webhooks
+      process.env.NEXT_PUBLIC_SUPABASE_URL || "https://gvcliwdhgqpbrbvehpsa.supabase.co",
+      supabaseKey
     );
 
     // 1. Atualizar o Pedido (Order)

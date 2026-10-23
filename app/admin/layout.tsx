@@ -4,25 +4,12 @@ import React, { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
-import { Menu } from "lucide-react";
-
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const isFirstMount = React.useRef(true);
-
   useEffect(() => {
-    if (isFirstMount.current) {
-      isFirstMount.current = false;
-      // Note: Mobile menu is now a bottom nav, so this might not be needed, but keeping for desktop/tablet edge cases
-      if (pathname === "/admin" && window.innerWidth >= 768 && window.innerWidth < 1024) {
-        setIsMobileMenuOpen(true);
-        return;
-      }
-    }
-    
-    // On any subsequent navigation, always close the menu automatically (for desktop/tablet edge cases)
+    // Ao navegar entre rotas, fecha o menu automaticamente
     setIsMobileMenuOpen(false);
   }, [pathname]);
 

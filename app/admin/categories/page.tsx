@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus, Search, MoreVertical, Edit2, Trash2, Power, PowerOff } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Power, PowerOff } from "lucide-react";
 
 // Mock Data
 const MOCK_CATEGORIES = [

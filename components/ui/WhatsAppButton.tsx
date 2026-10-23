@@ -1,8 +1,14 @@
 "use client";
 
 import { gerarLinkSuporte } from "@/lib/whatsapp";
+import { usePathname } from "next/navigation";
 
 export function WhatsAppButton() {
+  const pathname = usePathname();
+  if (!pathname || pathname === "/" || pathname === "" || pathname.startsWith("/admin") || pathname === "/login" || pathname === "/register") {
+    return null;
+  }
+
   const link = gerarLinkSuporte();
 
   return (

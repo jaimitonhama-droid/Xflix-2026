@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "list-buckets.js",
+    "reset-password.js",
+    "set-cors.js",
   ]),
 ]);
 

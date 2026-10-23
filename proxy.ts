@@ -44,7 +44,7 @@ export async function proxy(request: NextRequest) {
   // Refresh the session safely without blocking response on connection error
   try {
     await supabase.auth.getUser();
-  } catch (err) {
+  } catch {
     // Ignore error if Supabase connection fails
   }
 

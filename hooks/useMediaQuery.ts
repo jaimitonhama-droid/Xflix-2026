@@ -3,7 +3,7 @@
 // useMediaQuery: tracks media query match state
 // ============================================================
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 /**
  * Tracks whether a CSS media query matches.
@@ -11,27 +11,18 @@ import { useEffect, useState } from "react";
  *
  * @param query - CSS media query string
  * @returns boolean indicating if the query matches
- *
- * @example
- * const isMobile = useMediaQuery("(max-width: 768px)");
- * const isDesktop = useMediaQuery("(min-width: 1024px)");
  */
 export function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(false);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia(query);
-    setMatches(mediaQuery.matches);
-
-    const handler = (event: MediaQueryListEvent) => {
-      setMatches(event.matches);
-    };
-
-    mediaQuery.addEventListener("change", handler);
-    return () => mediaQuery.removeEventListener("change", handler);
-  }, [query]);
-
-  return matches;
+  return useSyncExternalStore(
+    (callback) => {
+      if (typeof window === "undefined") return () => {};
+      const mediaQuery = window.matchMedia(query);
+      mediaQuery.addEventListener("change", callback);
+      return () => mediaQuery.removeEventListener("change", callback);
+    },
+    () => (typeof window !== "undefined" ? window.matchMedia(query).matches : false),
+    () => false
+  );
 }
 
 // Convenience hooks for common breakpoints

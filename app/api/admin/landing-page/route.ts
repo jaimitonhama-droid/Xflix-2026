@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
+export const dynamic = "force-dynamic";
+
 const CONFIG_PATH = path.join(process.cwd(), "data", "landing_page_config.json");
 const UPLOADS_DIR = path.join(process.cwd(), "public", "uploads");
 
@@ -57,7 +59,16 @@ export async function POST(req: Request) {
   try {
     const contentType = req.headers.get("content-type") || "";
 
-    // Se for upload com FormData (ficheiro de imagem)
+    // 1. JSON (Método principal, leve e sem risco de estouro de body)
+    if (contentType.includes("application/json")) {
+      const body = await req.json();
+      const currentConfig = readConfig();
+      const updated = { ...currentConfig, ...body };
+      writeConfig(updated);
+      return NextResponse.json({ success: true, config: updated });
+    }
+
+    // 2. Se for upload com FormData (fallback)
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
       const currentConfig = readConfig();
@@ -65,6 +76,10 @@ export async function POST(req: Request) {
       if (!fs.existsSync(UPLOADS_DIR)) {
         fs.mkdirSync(UPLOADS_DIR, { recursive: true });
       }
+
+      let uploadedCoverUrl: string | null = null;
+      let uploadedAvatarUrl: string | null = null;
+      let uploadedVideoUrl: string | null = null;
 
       // Upload de Capa
       const coverFile = formData.get("coverFile") as File | null;
@@ -74,7 +89,7 @@ export async function POST(req: Request) {
         const filePath = path.join(UPLOADS_DIR, fileName);
         const bytes = await coverFile.arrayBuffer();
         fs.writeFileSync(filePath, Buffer.from(bytes));
-        currentConfig.coverUrl = `/uploads/${fileName}`;
+        uploadedCoverUrl = `/uploads/${fileName}`;
       }
 
       // Upload de Avatar
@@ -85,7 +100,7 @@ export async function POST(req: Request) {
         const filePath = path.join(UPLOADS_DIR, fileName);
         const bytes = await avatarFile.arrayBuffer();
         fs.writeFileSync(filePath, Buffer.from(bytes));
-        currentConfig.avatarUrl = `/uploads/${fileName}`;
+        uploadedAvatarUrl = `/uploads/${fileName}`;
       }
 
       // Upload de Vídeo de Demonstração
@@ -96,12 +111,16 @@ export async function POST(req: Request) {
         const filePath = path.join(UPLOADS_DIR, fileName);
         const bytes = await videoFile.arrayBuffer();
         fs.writeFileSync(filePath, Buffer.from(bytes));
-        currentConfig.teaserVideoUrl = `/uploads/${fileName}`;
+        uploadedVideoUrl = `/uploads/${fileName}`;
       }
 
-      // Outros campos em texto
+      // Outros campos em texto sem sobrescrever ficheiros recém-enviados
       for (const [key, value] of formData.entries()) {
         if (key !== "coverFile" && key !== "avatarFile" && key !== "videoFile" && typeof value === "string") {
+          if (key === "teaserVideoUrl" && uploadedVideoUrl) continue;
+          if (key === "coverUrl" && uploadedCoverUrl) continue;
+          if (key === "avatarUrl" && uploadedAvatarUrl) continue;
+
           if (key === "isVerified") {
             currentConfig.isVerified = value === "true";
           } else {
@@ -110,12 +129,16 @@ export async function POST(req: Request) {
         }
       }
 
+      if (uploadedVideoUrl) currentConfig.teaserVideoUrl = uploadedVideoUrl;
+      if (uploadedCoverUrl) currentConfig.coverUrl = uploadedCoverUrl;
+      if (uploadedAvatarUrl) currentConfig.avatarUrl = uploadedAvatarUrl;
+
       writeConfig(currentConfig);
       return NextResponse.json({ success: true, config: currentConfig });
     }
 
-    // Se for JSON simples
-    const body = await req.json();
+    // Fallback genérico
+    const body = await req.json().catch(() => ({}));
     const currentConfig = readConfig();
     const updated = { ...currentConfig, ...body };
     writeConfig(updated);

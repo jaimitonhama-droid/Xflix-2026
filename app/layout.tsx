@@ -2,10 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { QueryProvider } from "@/providers/QueryProvider";
-import Link from "next/link";
-import { Film, Menu } from "lucide-react";
 import { Footer } from "@/components/layout/Footer";
-import { SearchBar } from "@/components/ui/SearchBar";
 import { TopNavbar } from "@/components/layout/TopNavbar";
 import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
 import { InstallPwaPrompt } from "@/components/ui/InstallPwaPrompt";
@@ -49,6 +46,7 @@ export default function RootLayout({
               {children}
             </main>
             <Footer />
+            <WhatsAppButton />
             <InstallPwaPrompt />
           </AuthProvider>
         </QueryProvider>

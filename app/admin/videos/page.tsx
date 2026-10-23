@@ -1,7 +1,24 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Plus, Search, Edit2, Trash2, UploadCloud, X, Film, DollarSign, Image as ImageIcon, CheckCircle2, RefreshCw, Eye, Tag, Sparkles, Shield, Star, Zap } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Edit2,
+  Trash2,
+  UploadCloud,
+  X,
+  Film,
+  DollarSign,
+  Image as ImageIcon,
+  CheckCircle2,
+  RefreshCw,
+  Tag,
+  Sparkles,
+  Star,
+  Check,
+  Play,
+} from "lucide-react";
 import { createClient } from "@/services/supabase/client";
 
 interface PackageItem {
@@ -15,6 +32,7 @@ interface PackageItem {
   size: string;
   quality: string;
   badge: string;
+  status: string;
   thumbnail_url: string;
   video_url: string;
   created_at: string;
@@ -24,16 +42,19 @@ export default function AdminVideosPage() {
   const supabase = createClient();
 
   const [packages, setPackages] = useState<PackageItem[]>([]);
+  const [categoriesList, setCategoriesList] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
-  // Estados do Modal
+  // Estados do Modal & Edição
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingPackageId, setEditingPackageId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatusText, setUploadStatusText] = useState("");
 
-  // Formulário de Cadastro do Pacote
+  // Formulário do Pacote
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("Exclusivos VIP");
@@ -43,19 +64,23 @@ export default function AdminVideosPage() {
   const [size, setSize] = useState("15 GB");
   const [quality, setQuality] = useState("FULL HD");
   const [badge, setBadge] = useState("HOT");
+  const [status, setStatus] = useState("published");
 
-  // Ficheiros Selecionados
+  // Ficheiros & URLs do Vídeo
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
-  
+  const [directVideoUrl, setDirectVideoUrl] = useState("");
+
+  // Ficheiros & URLs da Capa
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreviewUrl, setThumbnailPreviewUrl] = useState<string | null>(null);
-  
-  // Controle de arrasto e captura de frame do vídeo
+  const [directThumbUrl, setDirectThumbUrl] = useState("");
+
+  // Controle do scrubber de vídeo
   const [videoDuration, setVideoDuration] = useState<number>(0);
   const [currentSeekTime, setCurrentSeekTime] = useState<number>(0);
   const [frameCapturedSuccess, setFrameCapturedSuccess] = useState<boolean>(false);
-  
+
   const videoInputRef = useRef<HTMLInputElement>(null);
   const thumbInputRef = useRef<HTMLInputElement>(null);
   const captureVideoRef = useRef<HTMLVideoElement>(null);
@@ -64,10 +89,41 @@ export default function AdminVideosPage() {
   // Cálculo dinâmico de desconto
   const precoNum = parseFloat(price) || 0;
   const precoOriginalNum = parseFloat(priceOriginal) || 0;
-  const percentualDesconto = precoOriginalNum > precoNum
-    ? Math.round(((precoOriginalNum - precoNum) / precoOriginalNum) * 100)
-    : 0;
+  const percentualDesconto =
+    precoOriginalNum > precoNum
+      ? Math.round(((precoOriginalNum - precoNum) / precoOriginalNum) * 100)
+      : 0;
 
+  // Carregar Categorias
+  const fetchCategories = async () => {
+    try {
+      const { data } = await supabase.from("categories").select("name").order("name");
+      if (data && data.length > 0) {
+        const names = data.map((c: any) => c.name);
+        setCategoriesList(Array.from(new Set(names)));
+      } else {
+        setCategoriesList([
+          "Exclusivos VIP",
+          "Lançamentos VIP",
+          "Exclusivos Xflix",
+          "Cenas Completas",
+          "Mais Vistos",
+          "Novos Conteúdos",
+          "Populares",
+        ]);
+      }
+    } catch {
+      setCategoriesList([
+        "Exclusivos VIP",
+        "Lançamentos VIP",
+        "Exclusivos Xflix",
+        "Cenas Completas",
+        "Mais Vistos",
+      ]);
+    }
+  };
+
+  // Carregar Pacotes
   const fetchPackages = async () => {
     setIsLoading(true);
     try {
@@ -80,7 +136,12 @@ export default function AdminVideosPage() {
         setPackages([]);
       } else {
         const mapped: PackageItem[] = data.map((v: any) => {
-          let parsedMeta = { text: v.description || "", size: "15 GB", quality: "FULL HD", badge: "HOT" };
+          let parsedMeta = {
+            text: v.description || "",
+            size: "15 GB",
+            quality: "FULL HD",
+            badge: "HOT",
+          };
           try {
             if (v.description && v.description.startsWith("{")) {
               parsedMeta = { ...parsedMeta, ...JSON.parse(v.description) };
@@ -93,16 +154,23 @@ export default function AdminVideosPage() {
             id: v.id,
             title: v.title,
             description: parsedMeta.text,
-            category: v.category?.name || "Sem Categoria",
+            category: v.category?.name || "Exclusivos VIP",
             price: v.price || 30,
             priceOriginal: v.rental_price || (v.price ? v.price * 2 : 60),
             quantityVideos: v.duration || 50,
             size: parsedMeta.size || "15 GB",
             quality: parsedMeta.quality || "FULL HD",
             badge: parsedMeta.badge || "HOT",
-            thumbnail_url: v.thumbnail_url || "https://images.unsplash.com/photo-1542051812871-757500d5a228?q=80&w=800&auto=format&fit=crop",
+            status: v.status || "published",
+            thumbnail_url:
+              v.thumbnail_url ||
+              "https://images.unsplash.com/photo-1542051812871-757500d5a228?q=80&w=800&auto=format&fit=crop",
             video_url: v.video_url || "",
-            created_at: new Date(v.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" }),
+            created_at: new Date(v.created_at).toLocaleDateString("pt-BR", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            }),
           };
         });
         setPackages(mapped);
@@ -116,6 +184,7 @@ export default function AdminVideosPage() {
 
   useEffect(() => {
     fetchPackages();
+    fetchCategories();
   }, []);
 
   // Formatar tempo em mm:ss
@@ -126,15 +195,51 @@ export default function AdminVideosPage() {
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
+  // Abrir Modal para NOVO PACOTE
+  const handleOpenCreateModal = () => {
+    resetForm();
+    setEditingPackageId(null);
+    setIsModalOpen(true);
+  };
+
+  // Abrir Modal para EDITAR PACOTE EXISTENTE
+  const handleOpenEditModal = (pkg: PackageItem) => {
+    resetForm();
+    setEditingPackageId(pkg.id);
+
+    setTitle(pkg.title);
+    setDescription(pkg.description);
+    setCategory(pkg.category || "Exclusivos VIP");
+    setPrice(String(pkg.price));
+    setPriceOriginal(String(pkg.priceOriginal));
+    setQuantityVideos(String(pkg.quantityVideos));
+    setSize(pkg.size || "15 GB");
+    setQuality(pkg.quality || "FULL HD");
+    setBadge(pkg.badge || "HOT");
+    setStatus(pkg.status || "published");
+
+    // Configurar Capa Atual
+    setThumbnailPreviewUrl(pkg.thumbnail_url || null);
+    setDirectThumbUrl(pkg.thumbnail_url || "");
+    setThumbnailFile(null);
+
+    // Configurar Vídeo Atual
+    setVideoPreviewUrl(pkg.video_url || null);
+    setDirectVideoUrl(pkg.video_url || "");
+    setVideoFile(null);
+
+    setIsModalOpen(true);
+  };
+
   // Selecionar Vídeo de Prévia
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setVideoFile(file);
-      if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl);
+      if (videoPreviewUrl && videoPreviewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(videoPreviewUrl);
+      }
       setVideoPreviewUrl(URL.createObjectURL(file));
-      setThumbnailFile(null);
-      setThumbnailPreviewUrl(null);
       setVideoDuration(0);
       setCurrentSeekTime(0);
       setFrameCapturedSuccess(false);
@@ -155,21 +260,37 @@ export default function AdminVideosPage() {
     const video = captureVideoRef.current;
     const canvas = captureCanvasRef.current;
     if (video && canvas) {
-      canvas.width = video.videoWidth || 1280;
-      canvas.height = video.videoHeight || 720;
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const file = new File([blob], "thumbnail.jpg", { type: "image/jpeg" });
-            setThumbnailFile(file);
-            if (thumbnailPreviewUrl) URL.revokeObjectURL(thumbnailPreviewUrl);
-            setThumbnailPreviewUrl(URL.createObjectURL(blob));
-            setFrameCapturedSuccess(true);
-            setTimeout(() => setFrameCapturedSuccess(false), 2000);
-          }
-        }, "image/jpeg", 0.95);
+      try {
+        canvas.width = video.videoWidth || 1280;
+        canvas.height = video.videoHeight || 720;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const file = new File([blob], `frame-${Date.now()}.jpg`, {
+                  type: "image/jpeg",
+                });
+                setThumbnailFile(file);
+                if (thumbnailPreviewUrl && thumbnailPreviewUrl.startsWith("blob:")) {
+                  URL.revokeObjectURL(thumbnailPreviewUrl);
+                }
+                setThumbnailPreviewUrl(URL.createObjectURL(blob));
+                setDirectThumbUrl("");
+                setFrameCapturedSuccess(true);
+                setTimeout(() => setFrameCapturedSuccess(false), 2500);
+              }
+            },
+            "image/jpeg",
+            0.95
+          );
+        }
+      } catch (err: unknown) {
+        console.warn("Aviso ao capturar frame:", err);
+        alert(
+          "Para capturar um frame direto do vídeo, selecione o arquivo de vídeo do seu dispositivo ou envie a imagem da capa abaixo."
+        );
       }
     }
   };
@@ -179,87 +300,105 @@ export default function AdminVideosPage() {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setThumbnailFile(file);
-      if (thumbnailPreviewUrl) URL.revokeObjectURL(thumbnailPreviewUrl);
+      if (thumbnailPreviewUrl && thumbnailPreviewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(thumbnailPreviewUrl);
+      }
       setThumbnailPreviewUrl(URL.createObjectURL(file));
+      setDirectThumbUrl("");
     }
   };
 
-  // Submeter Publicação do Pacote
+  // Submeter Salvar ou Atualizar Pacote
   const handleSavePackage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title) {
+    if (!title.trim()) {
       alert("Por favor, preencha o nome do pacote.");
       return;
     }
-    if (!videoFile) {
-      alert("É obrigatório selecionar o ficheiro de vídeo da prévia.");
+
+    // Se for novo pacote, precisa ter vídeo selecionado ou URL
+    if (!editingPackageId && !videoFile && !directVideoUrl.trim()) {
+      alert("É obrigatório selecionar o vídeo de prévia para cadastrar um novo pacote.");
       return;
     }
 
     setIsUploading(true);
     setUploadProgress(10);
+    setUploadStatusText("Preparando arquivos...");
 
     const progressInterval = setInterval(() => {
       setUploadProgress((prev) => {
-        if (prev < 65) return prev + 2;
+        if (prev < 65) return prev + 3;
         if (prev < 85) return prev + 1;
         return prev;
       });
-    }, 1000);
+    }, 800);
 
     try {
-      // 1. Upload do Vídeo de Prévia
-      const videoExt = videoFile.name.split('.').pop() || 'mp4';
-      const videoFileName = `${Date.now()}-video.${videoExt}`;
-      const { error: videoError } = await supabase.storage
-        .from('videos')
-        .upload(videoFileName, videoFile, { 
-          cacheControl: '3600',
-          contentType: videoFile.type
-        });
-      
-      if (videoError) throw new Error("Erro no upload do vídeo: " + videoError.message);
+      let finalVideoUrl = directVideoUrl.trim() || videoPreviewUrl || "";
+      let finalThumbnailUrl = directThumbUrl.trim() || thumbnailPreviewUrl || null;
 
-      const { data: { publicUrl: videoUrl } } = supabase.storage
-        .from('videos')
-        .getPublicUrl(videoFileName);
-      
-      clearInterval(progressInterval);
-      setUploadProgress(85);
+      // 1. Upload de Novo Vídeo (se o usuário selecionou arquivo)
+      if (videoFile) {
+        setUploadStatusText(`Enviando vídeo (${(videoFile.size / (1024 * 1024)).toFixed(1)} MB)...`);
+        const videoExt = videoFile.name.split(".").pop()?.toLowerCase() || "mp4";
+        const videoFileName = `${Date.now()}-video.${videoExt}`;
 
-      // 2. Upload da Capa (se houver)
-      let finalThumbnailUrl = null;
-      if (thumbnailFile) {
-         const thumbExt = thumbnailFile.name.split('.').pop() || 'jpg';
-         const thumbFileName = `${Date.now()}-thumb.${thumbExt}`;
-         const { error: thumbError } = await supabase.storage
-           .from('videos')
-           .upload(thumbFileName, thumbnailFile, {
-             cacheControl: '3600',
-             contentType: thumbnailFile.type
-           });
-           
-         if (thumbError) {
-             console.warn("Erro no upload da capa:", thumbError);
-         } else {
-             const { data: { publicUrl: tUrl } } = supabase.storage
-                .from('videos')
-                .getPublicUrl(thumbFileName);
-             finalThumbnailUrl = tUrl;
-         }
+        const { error: videoError } = await supabase.storage
+          .from("videos")
+          .upload(videoFileName, videoFile, {
+            cacheControl: "3600",
+            contentType: videoFile.type || "video/mp4",
+            upsert: true,
+          });
+
+        if (videoError) throw new Error("Erro no upload do vídeo: " + videoError.message);
+
+        const {
+          data: { publicUrl: vUrl },
+        } = supabase.storage.from("videos").getPublicUrl(videoFileName);
+
+        finalVideoUrl = vUrl;
       }
 
-      setUploadProgress(90);
+      setUploadProgress(70);
+
+      // 2. Upload de Nova Capa (se o usuário capturou frame ou selecionou imagem)
+      if (thumbnailFile) {
+        setUploadStatusText("Enviando foto da capa...");
+        const thumbExt = thumbnailFile.name.split(".").pop()?.toLowerCase() || "jpg";
+        const thumbFileName = `${Date.now()}-thumb.${thumbExt}`;
+
+        const { error: thumbError } = await supabase.storage
+          .from("videos")
+          .upload(thumbFileName, thumbnailFile, {
+            cacheControl: "3600",
+            contentType: thumbnailFile.type || "image/jpeg",
+            upsert: true,
+          });
+
+        if (thumbError) {
+          console.warn("Aviso no upload da capa:", thumbError);
+        } else {
+          const {
+            data: { publicUrl: tUrl },
+          } = supabase.storage.from("videos").getPublicUrl(thumbFileName);
+          finalThumbnailUrl = tUrl;
+        }
+      }
+
+      setUploadProgress(85);
+      setUploadStatusText("Gravando dados no banco...");
 
       // 3. Buscar ID da categoria selecionada
       const { data: catData } = await supabase
         .from("categories")
         .select("id")
-        .ilike("name", `%${category.split(' ')[0]}%`)
+        .ilike("name", `%${category.split(" ")[0]}%`)
         .limit(1)
         .maybeSingle();
 
-      // 4. Montar metadata da descrição (para tamanho, qualidade e badge)
+      // 4. Montar metadata da descrição
       const metaDescription = JSON.stringify({
         text: description,
         size: size || "15 GB",
@@ -267,84 +406,125 @@ export default function AdminVideosPage() {
         badge: badge || "HOT",
       });
 
-      // 5. Gravar na Base de Dados (Tabela Videos com campos de pacote)
+      // 5. Salvar na Base de Dados (INSERT se for novo, UPDATE se estiver editando)
       setUploadProgress(95);
-      const { error: dbError } = await supabase
-        .from("videos")
-        .insert({
-          title,
+
+      if (editingPackageId) {
+        const { error: updateError } = await supabase
+          .from("videos")
+          .update({
+            title: title.trim(),
+            description: metaDescription,
+            price: precoNum,
+            rental_price: precoOriginalNum,
+            status: status || "published",
+            thumbnail_url: finalThumbnailUrl,
+            video_url: finalVideoUrl,
+            category_id: catData?.id || null,
+            duration: parseInt(quantityVideos) || 50,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", editingPackageId);
+
+        if (updateError) throw new Error("Erro ao atualizar pacote: " + updateError.message);
+      } else {
+        const { error: insertError } = await supabase.from("videos").insert({
+          title: title.trim(),
           description: metaDescription,
           price: precoNum,
           rental_price: precoOriginalNum,
-          status: "published",
+          status: status || "published",
           thumbnail_url: finalThumbnailUrl,
-          video_url: videoUrl,
+          video_url: finalVideoUrl,
           category_id: catData?.id || null,
-          duration: parseInt(quantityVideos) || 50
+          duration: parseInt(quantityVideos) || 50,
         });
 
-      if (dbError) throw new Error("Erro ao gravar dados na BD: " + dbError.message);
+        if (insertError) throw new Error("Erro ao publicar pacote: " + insertError.message);
+      }
 
+      clearInterval(progressInterval);
       setUploadProgress(100);
-      alert("Pacote publicado com sucesso! Já está disponível na loja.");
-      
+
+      alert(
+        editingPackageId
+          ? "✅ Pacote atualizado com sucesso!"
+          : "✅ Pacote publicado com sucesso! Já está disponível na loja."
+      );
+
       fetchPackages();
       setIsModalOpen(false);
       resetForm();
-
-    } catch (err: any) {
+    } catch (err: unknown) {
       clearInterval(progressInterval);
       console.error(err);
-      alert("Ocorreu um erro: " + err.message);
+      const msg = err instanceof Error ? err.message : "Tente novamente.";
+      alert("Ocorreu um erro: " + msg);
     } finally {
       clearInterval(progressInterval);
       setIsUploading(false);
+      setUploadStatusText("");
     }
   };
 
   const resetForm = () => {
+    setEditingPackageId(null);
     setTitle("");
     setDescription("");
+    setCategory("Exclusivos VIP");
     setPrice("30");
     setPriceOriginal("60");
     setQuantityVideos("50");
     setSize("15 GB");
     setQuality("FULL HD");
     setBadge("HOT");
+    setStatus("published");
+
     setVideoFile(null);
-    if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl);
+    if (videoPreviewUrl && videoPreviewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(videoPreviewUrl);
+    }
     setVideoPreviewUrl(null);
+    setDirectVideoUrl("");
+
     setThumbnailFile(null);
-    if (thumbnailPreviewUrl) URL.revokeObjectURL(thumbnailPreviewUrl);
+    if (thumbnailPreviewUrl && thumbnailPreviewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(thumbnailPreviewUrl);
+    }
     setThumbnailPreviewUrl(null);
+    setDirectThumbUrl("");
+
     setVideoDuration(0);
     setCurrentSeekTime(0);
     setFrameCapturedSuccess(false);
     setUploadProgress(0);
+    setUploadStatusText("");
   };
 
-  const handleDeletePackage = async (id: string) => {
-    if (confirm("Tem certeza que deseja eliminar este pacote da loja permanentemente?")) {
+  const handleDeletePackage = async (id: string, packageTitle: string) => {
+    if (confirm(`Tem certeza que deseja eliminar permanentemente o pacote "${packageTitle}"?`)) {
       try {
-        const { error } = await supabase.from('videos').delete().eq('id', id);
+        const { error } = await supabase.from("videos").delete().eq("id", id);
         if (error) throw error;
         setPackages((prev) => prev.filter((v) => v.id !== id));
-      } catch (err: any) {
-        alert("Erro ao eliminar o pacote: " + err.message);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Erro desconhecido";
+        alert("Erro ao eliminar o pacote: " + msg);
       }
     }
   };
 
   const filteredPackages = packages.filter((pkg) => {
-    const matchesSearch = pkg.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          pkg.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "all" || pkg.category === selectedCategory;
+    const matchesSearch =
+      pkg.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      pkg.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory =
+      selectedCategory === "all" || pkg.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
   return (
     <div className="space-y-6 sm:space-y-8 select-none">
-      
       {/* ─── TOPO: TÍTULO E BOTÃO DE CRIAR PACOTE ─── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-5">
         <div>
@@ -353,13 +533,13 @@ export default function AdminVideosPage() {
             <span>Gerenciar Pacotes & Coleções VIP</span>
           </h1>
           <p className="text-xs sm:text-sm text-zinc-400 mt-1">
-            Publique coleções com preços, prévias e contagem de vídeos para venda no WhatsApp
+            Publique e edite coleções com preços, teasers de vídeo, capas e tags para WhatsApp
           </p>
         </div>
 
         <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-[#00a2ff] hover:bg-[#0091ea] text-white font-black px-5 py-3 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(0,162,255,0.3)] transition-all active:scale-95"
+          onClick={handleOpenCreateModal}
+          className="bg-[#00a2ff] hover:bg-[#0091ea] text-white font-black px-5 py-3 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(0,162,255,0.3)] transition-all active:scale-95 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Publicar Novo Pacote</span>
@@ -391,11 +571,13 @@ export default function AdminVideosPage() {
       ) : filteredPackages.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center bg-[#101015] rounded-2xl border border-zinc-800 p-8">
           <Film className="w-12 h-12 text-zinc-600 mb-3" />
-          <h3 className="text-white font-bold text-base">Nenhum pacote publicado</h3>
-          <p className="text-zinc-500 text-xs mt-1 mb-4">Clique no botão abaixo para adicionar a primeira coleção à loja.</p>
+          <h3 className="text-white font-bold text-base">Nenhum pacote encontrado</h3>
+          <p className="text-zinc-500 text-xs mt-1 mb-4">
+            Clique no botão abaixo para adicionar ou publicar coleções na loja.
+          </p>
           <button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-purple-600 hover:bg-purple-500 text-white font-bold px-4 py-2 rounded-xl text-xs"
+            onClick={handleOpenCreateModal}
+            className="bg-purple-600 hover:bg-purple-500 text-white font-bold px-4 py-2 rounded-xl text-xs cursor-pointer"
           >
             Adicionar Pacote
           </button>
@@ -405,7 +587,7 @@ export default function AdminVideosPage() {
           {filteredPackages.map((pkg) => (
             <div
               key={pkg.id}
-              className="bg-[#101015] rounded-2xl overflow-hidden border border-zinc-800/80 hover:border-zinc-700 transition-all flex flex-col group"
+              className="bg-[#101015] rounded-2xl overflow-hidden border border-zinc-800/80 hover:border-zinc-700 transition-all flex flex-col group shadow-lg"
             >
               {/* Thumbnail 16:9 */}
               <div className="relative aspect-video w-full overflow-hidden bg-black flex items-center justify-center">
@@ -424,6 +606,13 @@ export default function AdminVideosPage() {
                 <div className="absolute bottom-2.5 right-2.5 bg-black/80 text-zinc-300 font-bold text-[10px] px-2 py-0.5 rounded">
                   {pkg.quantityVideos} vídeos
                 </div>
+
+                {/* Status se for rascunho */}
+                {pkg.status !== "published" && (
+                  <div className="absolute top-2.5 right-2.5 bg-amber-500 text-black font-black text-[9px] px-1.5 py-0.5 rounded uppercase">
+                    {pkg.status}
+                  </div>
+                )}
               </div>
 
               {/* Corpo */}
@@ -440,13 +629,11 @@ export default function AdminVideosPage() {
                 </div>
 
                 {pkg.description && (
-                  <p className="text-zinc-400 text-xs line-clamp-1">
-                    {pkg.description}
-                  </p>
+                  <p className="text-zinc-400 text-xs line-clamp-1">{pkg.description}</p>
                 )}
 
                 {/* Tags de Informação */}
-                <div className="flex items-center gap-2 pt-1">
+                <div className="flex items-center gap-2 pt-1 flex-wrap">
                   <span className="bg-[#1c182c] text-purple-200 text-xs font-black px-2.5 py-1 rounded-md border border-purple-500/40">
                     {pkg.quantityVideos} VÍDEOS
                   </span>
@@ -458,7 +645,7 @@ export default function AdminVideosPage() {
                   </span>
                 </div>
 
-                {/* Preço e Ações */}
+                {/* Preço e Botões de Ação (Editar e Eliminar) */}
                 <div className="flex items-center justify-between mt-auto pt-3 border-t border-zinc-800/80">
                   <div className="flex items-baseline gap-1.5">
                     {pkg.priceOriginal > 0 && (
@@ -466,18 +653,30 @@ export default function AdminVideosPage() {
                         {pkg.priceOriginal} MT
                       </span>
                     )}
-                    <span className="text-white text-base font-black">
-                      {pkg.price} MT
-                    </span>
+                    <span className="text-white text-base font-black">{pkg.price} MT</span>
                   </div>
 
-                  <button
-                    onClick={() => handleDeletePackage(pkg.id)}
-                    className="p-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                    title="Excluir Pacote"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {/* AÇÕES: EDITAR E EXCLUIR */}
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEditModal(pkg)}
+                      className="px-3 py-1.5 text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 active:scale-95 rounded-lg transition-all flex items-center gap-1.5 shadow-md shadow-purple-600/20 cursor-pointer"
+                      title="Editar todas as informações do pacote"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                      <span>Editar</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeletePackage(pkg.id, pkg.title)}
+                      className="p-1.5 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors active:scale-95 cursor-pointer"
+                      title="Excluir Pacote Permanentemente"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -485,26 +684,42 @@ export default function AdminVideosPage() {
         </div>
       )}
 
-      {/* ─── MODAL DE PUBLICAR NOVO PACOTE / COLEÇÃO VIP ─── */}
+      {/* ─── MODAL DE PUBLICAR / EDITAR PACOTE VIP ─── */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/90 backdrop-blur-md animate-fade-in">
           <div className="bg-[#111116] border border-zinc-800 w-full sm:max-w-2xl rounded-t-3xl sm:rounded-2xl flex flex-col h-[94vh] sm:h-auto sm:max-h-[92vh] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-5 sm:zoom-in-95 duration-200">
-            
             {/* Cabeçalho do Modal */}
             <div className="flex items-center justify-between p-4 sm:p-6 border-b border-zinc-800/80 bg-[#14141c] flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-purple-600/20 border border-purple-500/40 flex items-center justify-center text-purple-400 flex-shrink-0">
-                  <Sparkles className="w-5 h-5" />
+                  {editingPackageId ? <Edit2 className="w-5 h-5" /> : <Sparkles className="w-5 h-5" />}
                 </div>
                 <div>
-                  <h3 className="text-base sm:text-lg font-black text-white leading-tight">Publicar Pacote VIP</h3>
-                  <p className="text-xs text-zinc-400">Preencha os dados e anexe o teaser para WhatsApp</p>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base sm:text-lg font-black text-white leading-tight">
+                      {editingPackageId ? "Editar Pacote VIP" : "Publicar Pacote VIP"}
+                    </h3>
+                    {editingPackageId && (
+                      <span className="text-[10px] font-black uppercase tracking-wider bg-purple-950 border border-purple-500/40 text-purple-300 px-2 py-0.5 rounded-full">
+                        Modo Edição
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-zinc-400">
+                    {editingPackageId
+                      ? "Modifique título, valores, vídeo teaser, fotos de capa ou tags"
+                      : "Preencha os dados e anexe o teaser para WhatsApp"}
+                  </p>
                 </div>
               </div>
-              
-              <button 
-                onClick={() => { setIsModalOpen(false); resetForm(); }}
-                className="w-10 h-10 flex items-center justify-center text-zinc-400 hover:text-white rounded-xl bg-zinc-900 border border-zinc-800 active:scale-95 transition-all flex-shrink-0"
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  resetForm();
+                }}
+                className="w-10 h-10 flex items-center justify-center text-zinc-400 hover:text-white rounded-xl bg-zinc-900 border border-zinc-800 active:scale-95 transition-all flex-shrink-0 cursor-pointer"
                 aria-label="Fechar"
               >
                 <X className="w-5 h-5" />
@@ -513,13 +728,14 @@ export default function AdminVideosPage() {
 
             {/* Conteúdo Rolável do Formulário */}
             <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4">
-              <form id="publish-package-form" onSubmit={handleSavePackage} className="space-y-4">
-                
+              <form id="package-form" onSubmit={handleSavePackage} className="space-y-4">
                 {/* 1. Nome do Pacote & Categoria */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                   <div className="sm:col-span-2 space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Nome do Pacote / Coleção *</label>
-                    <input 
+                    <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
+                      Nome do Pacote / Coleção *
+                    </label>
+                    <input
                       type="text"
                       required
                       value={title}
@@ -530,17 +746,19 @@ export default function AdminVideosPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Categoria</label>
+                    <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
+                      Categoria
+                    </label>
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
                       className="w-full h-12 bg-[#161520] border border-zinc-700/80 text-white text-base rounded-xl px-3 outline-none focus:border-purple-500 transition-all"
                     >
-                      <option value="Exclusivos VIP">Exclusivos VIP</option>
-                      <option value="Novos Conteúdos">Novos Conteúdos</option>
-                      <option value="Teens VIP">Teens VIP</option>
-                      <option value="Lançamentos">Lançamentos</option>
-                      <option value="Populares">Populares</option>
+                      {categoriesList.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -553,7 +771,7 @@ export default function AdminVideosPage() {
                         <DollarSign className="w-4 h-4" /> Preço Atual (Venda) *
                       </label>
                       <div className="relative">
-                        <input 
+                        <input
                           type="number"
                           required
                           value={price}
@@ -561,7 +779,9 @@ export default function AdminVideosPage() {
                           placeholder="30"
                           className="w-full h-12 bg-[#111118] border border-zinc-700 text-emerald-400 font-black text-lg rounded-xl px-4 pr-12 outline-none focus:border-emerald-500 shadow-inner"
                         />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-emerald-500/70">MT</span>
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-emerald-500/70">
+                          MT
+                        </span>
                       </div>
                     </div>
 
@@ -570,14 +790,16 @@ export default function AdminVideosPage() {
                         <span>Preço Riscado (Antes)</span>
                       </label>
                       <div className="relative">
-                        <input 
+                        <input
                           type="number"
                           value={priceOriginal}
                           onChange={(e) => setPriceOriginal(e.target.value)}
                           placeholder="60"
                           className="w-full h-12 bg-[#111118] border border-zinc-700 text-zinc-300 font-bold text-base rounded-xl px-4 pr-12 outline-none focus:border-purple-500 shadow-inner"
                         />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-500">MT</span>
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-500">
+                          MT
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -586,28 +808,34 @@ export default function AdminVideosPage() {
                   {percentualDesconto > 0 && (
                     <div className="bg-amber-500/10 border border-amber-500/25 rounded-xl px-3.5 py-2.5 flex items-center justify-between text-xs font-bold text-amber-400">
                       <span>🏷️ Desconto exibido: -{percentualDesconto}% OFF</span>
-                      <span className="text-emerald-400">Economia: {precoOriginalNum - precoNum} MT</span>
+                      <span className="text-emerald-400">
+                        Economia: {precoOriginalNum - precoNum} MT
+                      </span>
                     </div>
                   )}
                 </div>
 
-                {/* 3. Quantidade de Vídeos, Tamanho, Qualidade e Badge */}
+                {/* 3. Quantidade de Vídeos, Tamanho, Qualidade, Selo e Status */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Qtd. Vídeos *</label>
-                    <input 
+                    <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
+                      Qtd. Vídeos *
+                    </label>
+                    <input
                       type="number"
                       required
                       value={quantityVideos}
                       onChange={(e) => setQuantityVideos(e.target.value)}
-                      placeholder="54"
+                      placeholder="50"
                       className="w-full h-12 bg-[#161520] border border-zinc-700/80 text-white font-bold text-base rounded-xl px-3.5 outline-none focus:border-purple-500"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Tamanho</label>
-                    <input 
+                    <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
+                      Tamanho
+                    </label>
+                    <input
                       type="text"
                       value={size}
                       onChange={(e) => setSize(e.target.value)}
@@ -617,20 +845,25 @@ export default function AdminVideosPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Qualidade</label>
+                    <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
+                      Qualidade
+                    </label>
                     <select
                       value={quality}
                       onChange={(e) => setQuality(e.target.value)}
                       className="w-full h-12 bg-[#161520] border border-zinc-700/80 text-white font-bold text-base rounded-xl px-3 outline-none focus:border-purple-500"
                     >
                       <option value="FULL HD">FULL HD</option>
-                      <option value="4K">4K</option>
-                      <option value="HD">HD</option>
+                      <option value="4K">4K UHD</option>
+                      <option value="1080p">1080p</option>
+                      <option value="HD">720p HD</option>
                     </select>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Selo / Badge</label>
+                    <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
+                      Selo / Badge
+                    </label>
                     <select
                       value={badge}
                       onChange={(e) => setBadge(e.target.value)}
@@ -641,14 +874,17 @@ export default function AdminVideosPage() {
                       <option value="EXCLUSIVO">EXCLUSIVO 💎</option>
                       <option value="PREMIUM">PREMIUM 👑</option>
                       <option value="MAIS VENDIDO">MAIS VENDIDO 🚀</option>
+                      <option value="VIP">VIP 🌟</option>
                     </select>
                   </div>
                 </div>
 
-                {/* 4. Descrição */}
+                {/* 4. Descrição do Pacote */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Descrição do Pacote</label>
-                  <textarea 
+                  <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
+                    Descrição do Pacote
+                  </label>
+                  <textarea
                     rows={3}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
@@ -657,178 +893,244 @@ export default function AdminVideosPage() {
                   />
                 </div>
 
-                {/* 5. Upload do Vídeo de Prévia (Teaser MP4) */}
-                <div className="space-y-2 pt-2 border-t border-zinc-800">
-                  <label className="text-xs font-bold text-zinc-300 flex items-center gap-1.5 uppercase tracking-wider">
-                    <Film className="w-4 h-4 text-purple-400" /> Vídeo de Prévia (MP4 Teaser) *
-                  </label>
-                  
-                  <div 
+                {/* 5. VÍDEO DE PRÉVIA (TEASER MP4) */}
+                <div className="space-y-3 pt-3 border-t border-zinc-800">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-zinc-300 flex items-center gap-1.5 uppercase tracking-wider">
+                      <Film className="w-4 h-4 text-purple-400" /> Vídeo de Prévia (Teaser MP4)
+                    </label>
+
+                    {editingPackageId && !videoFile && videoPreviewUrl && (
+                      <span className="text-[11px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <Check className="w-3 h-3" /> Vídeo Atual Preservado
+                      </span>
+                    )}
+                  </div>
+
+                  <div
                     onClick={() => videoInputRef.current?.click()}
                     className="border-2 border-dashed border-zinc-700 hover:border-purple-500 bg-zinc-900/40 hover:bg-zinc-900/70 rounded-2xl p-5 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[110px] active:scale-[0.99]"
                   >
                     {videoFile ? (
                       <div className="space-y-1.5 text-center">
                         <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto" />
-                        <p className="text-sm text-white font-bold truncate max-w-[280px]">{videoFile.name}</p>
-                        <p className="text-xs text-emerald-400/80 font-semibold">{(videoFile.size / (1024 * 1024)).toFixed(1)} MB • Toque para trocar</p>
+                        <p className="text-sm text-white font-bold truncate max-w-[280px]">
+                          {videoFile.name}
+                        </p>
+                        <p className="text-xs text-emerald-400/80 font-semibold">
+                          {(videoFile.size / (1024 * 1024)).toFixed(1)} MB • Toque para trocar
+                        </p>
                       </div>
                     ) : (
                       <div className="space-y-2 flex flex-col items-center">
                         <div className="w-12 h-12 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
                           <UploadCloud className="w-6 h-6" />
                         </div>
-                        <span className="text-sm text-zinc-200 font-bold">Toque para selecionar vídeo da prévia</span>
-                        <span className="text-xs text-zinc-500">Formato .mp4 ou .mov</span>
+                        <span className="text-sm text-zinc-200 font-bold">
+                          {editingPackageId
+                            ? "Toque para substituir o arquivo de vídeo (Opcional)"
+                            : "Toque para selecionar vídeo da prévia"}
+                        </span>
+                        <span className="text-xs text-zinc-500">
+                          Formato .mp4 ou .mov (upload direto para Supabase)
+                        </span>
                       </div>
                     )}
-                    <input 
-                      type="file" 
-                      ref={videoInputRef} 
-                      onChange={handleVideoChange} 
-                      accept="video/*" 
-                      className="hidden" 
+                    <input
+                      type="file"
+                      ref={videoInputRef}
+                      onChange={handleVideoChange}
+                      accept="video/*"
+                      className="hidden"
+                    />
+                  </div>
+
+                  {/* URL Direta do Vídeo */}
+                  <div className="pt-1">
+                    <label className="text-[11px] font-semibold text-zinc-400 block mb-1">
+                      Ou insira a URL direta do vídeo (link Supabase ou externo):
+                    </label>
+                    <input
+                      type="text"
+                      value={directVideoUrl}
+                      onChange={(e) => {
+                        setDirectVideoUrl(e.target.value);
+                        setVideoPreviewUrl(e.target.value);
+                        setVideoFile(null);
+                      }}
+                      placeholder="https://...supabase.co/storage/v1/object/public/videos/video.mp4"
+                      className="w-full bg-[#161520] border border-zinc-700/80 text-white text-xs rounded-xl px-4 py-2.5 font-mono outline-none focus:border-purple-500 transition-colors"
                     />
                   </div>
                 </div>
 
                 {/* 6. Extrator de Capa / Upload de Capa */}
-                {videoPreviewUrl && (
+                {(videoPreviewUrl || thumbnailPreviewUrl) && (
                   <div className="space-y-4 bg-[#151520] p-4 rounded-2xl border border-zinc-800 animate-fade-in">
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-bold text-zinc-200 flex items-center gap-1.5 uppercase tracking-wider">
-                        <ImageIcon className="w-4 h-4 text-purple-400" /> Escolha a Capa no Vídeo
+                        <ImageIcon className="w-4 h-4 text-purple-400" /> Capa do Pacote & Scrubber
                       </label>
-                      <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-950/60 border border-cyan-500/30 px-2.5 py-0.5 rounded-lg">
-                        {formatTime(currentSeekTime)} / {formatTime(videoDuration)}
-                      </span>
+                      {videoDuration > 0 && (
+                        <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-950/60 border border-cyan-500/30 px-2.5 py-0.5 rounded-lg">
+                          {formatTime(currentSeekTime)} / {formatTime(videoDuration)}
+                        </span>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {/* Player de captura com slider de arrasto */}
-                      <div className="space-y-3 bg-zinc-950/80 p-3.5 rounded-xl border border-zinc-800">
-                        <div className="relative w-full aspect-video bg-black rounded-xl overflow-hidden border border-zinc-700">
-                          <video 
-                            ref={captureVideoRef}
-                            src={videoPreviewUrl} 
-                            preload="auto"
-                            playsInline
-                            className="w-full h-full object-contain"
-                            onLoadedMetadata={(e) => {
-                              const dur = e.currentTarget.duration || 0;
-                              setVideoDuration(dur);
-                              const initialTime = Math.min(1, dur > 1 ? 1 : 0);
-                              e.currentTarget.currentTime = initialTime;
-                              setCurrentSeekTime(initialTime);
-                            }}
-                            onSeeked={() => {
-                              captureFrame();
-                            }}
-                          />
-                        </div>
-
-                        {/* Slider / Linha do Tempo interativa para arrastar */}
-                        <div className="space-y-2 pt-1">
-                          <div className="flex items-center justify-between text-xs font-bold text-zinc-300">
-                            <span>Arraste para o momento desejado:</span>
-                            <span className="text-cyan-400 font-mono font-black">{formatTime(currentSeekTime)}</span>
+                      {videoPreviewUrl && (
+                        <div className="space-y-3 bg-zinc-950/80 p-3.5 rounded-xl border border-zinc-800">
+                          <div className="relative w-full aspect-video bg-black rounded-xl overflow-hidden border border-zinc-700">
+                            <video
+                              ref={captureVideoRef}
+                              crossOrigin="anonymous"
+                              src={videoPreviewUrl}
+                              preload="auto"
+                              playsInline
+                              controls
+                              className="w-full h-full object-contain"
+                              onLoadedMetadata={(e) => {
+                                const dur = e.currentTarget.duration || 0;
+                                setVideoDuration(dur);
+                                const initialTime = Math.min(1, dur > 1 ? 1 : 0);
+                                e.currentTarget.currentTime = initialTime;
+                                setCurrentSeekTime(initialTime);
+                              }}
+                            />
                           </div>
-                          
-                          <input 
-                            type="range"
-                            min="0"
-                            max={videoDuration || 10}
-                            step="0.05"
-                            value={currentSeekTime}
-                            onChange={(e) => handleSeek(parseFloat(e.target.value))}
-                            className="w-full h-3 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[#00a2ff] focus:outline-none"
-                          />
 
-                          {/* Botões de ajuste fino (-1s, +1s, Início, Fim) */}
-                          <div className="flex items-center justify-between gap-1.5 pt-1">
-                            <button
-                              type="button"
-                              onClick={() => handleSeek(0)}
-                              className="px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-bold rounded-lg transition-colors active:scale-95"
-                            >
-                              Início
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleSeek(currentSeekTime - 1)}
-                              className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-bold rounded-lg transition-colors active:scale-95"
-                            >
-                              -1s
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleSeek(currentSeekTime + 1)}
-                              className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-bold rounded-lg transition-colors active:scale-95"
-                            >
-                              +1s
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleSeek(videoDuration / 2)}
-                              className="px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-bold rounded-lg transition-colors active:scale-95"
-                            >
-                              Meio
-                            </button>
+                          {/* Slider / Linha do Tempo interativa para arrastar */}
+                          <div className="space-y-2 pt-1">
+                            <div className="flex items-center justify-between text-xs font-bold text-zinc-300">
+                              <span>Arraste até o frame para a foto:</span>
+                              <span className="text-cyan-400 font-mono font-black">
+                                {formatTime(currentSeekTime)}
+                              </span>
+                            </div>
+
+                            <input
+                              type="range"
+                              min="0"
+                              max={videoDuration || 10}
+                              step="0.05"
+                              value={currentSeekTime}
+                              onChange={(e) => handleSeek(parseFloat(e.target.value))}
+                              className="w-full h-3 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[#00a2ff] focus:outline-none"
+                            />
+
+                            {/* Botões de ajuste fino */}
+                            <div className="flex items-center justify-between gap-1.5 pt-1">
+                              <button
+                                type="button"
+                                onClick={() => handleSeek(0)}
+                                className="px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-bold rounded-lg transition-colors active:scale-95 cursor-pointer"
+                              >
+                                Início
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleSeek(Math.max(0, currentSeekTime - 1))}
+                                className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-bold rounded-lg transition-colors active:scale-95 cursor-pointer"
+                              >
+                                -1s
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleSeek(Math.min(videoDuration, currentSeekTime + 1))
+                                }
+                                className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-bold rounded-lg transition-colors active:scale-95 cursor-pointer"
+                              >
+                                +1s
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleSeek(videoDuration / 2)}
+                                className="px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-bold rounded-lg transition-colors active:scale-95 cursor-pointer"
+                              >
+                                Meio
+                              </button>
+                            </div>
                           </div>
-                        </div>
 
-                        {/* Botão para capturar o frame selecionado */}
-                        <button 
-                          type="button"
-                          onClick={captureFrame}
-                          className="w-full h-12 bg-gradient-to-r from-purple-600 to-[#00a2ff] hover:brightness-110 text-white text-xs sm:text-sm font-black rounded-xl transition-all shadow-[0_4px_16px_rgba(139,92,246,0.3)] flex items-center justify-center gap-2 active:scale-95"
-                        >
-                          <ImageIcon className="w-4 h-4" /> 
-                          <span>Capturar Este Frame Como Capa</span>
-                        </button>
-                      </div>
+                          {/* Botão para capturar o frame selecionado */}
+                          <button
+                            type="button"
+                            onClick={captureFrame}
+                            className="w-full h-12 bg-gradient-to-r from-purple-600 to-[#00a2ff] hover:brightness-110 text-white text-xs sm:text-sm font-black rounded-xl transition-all shadow-[0_4px_16px_rgba(139,92,246,0.3)] flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
+                          >
+                            <ImageIcon className="w-4 h-4" />
+                            <span>Capturar Este Frame Como Capa</span>
+                          </button>
+                        </div>
+                      )}
 
                       {/* Capa capturada / Preview final */}
                       <div className="space-y-3 bg-zinc-950/80 p-3.5 rounded-xl border border-zinc-800 flex flex-col justify-between">
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-zinc-200">Capa do Pacote Selecionada:</span>
+                            <span className="text-xs font-bold text-zinc-200">
+                              Capa do Pacote Selecionada:
+                            </span>
                             {thumbnailPreviewUrl && (
                               <span className="text-[11px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
                                 <CheckCircle2 className="w-3.5 h-3.5" /> Pronta
                               </span>
                             )}
                           </div>
-                          
+
                           <div className="w-full aspect-video bg-black rounded-xl border border-zinc-700 flex items-center justify-center overflow-hidden relative shadow-inner">
                             {thumbnailPreviewUrl ? (
-                              <img src={thumbnailPreviewUrl} alt="Thumbnail Preview" className="w-full h-full object-cover" />
+                              <img
+                                src={thumbnailPreviewUrl}
+                                alt="Thumbnail Preview"
+                                className="w-full h-full object-cover"
+                              />
                             ) : (
                               <div className="flex flex-col items-center gap-1.5 text-zinc-500 p-4 text-center">
                                 <ImageIcon className="w-8 h-8 opacity-40" />
-                                <span className="text-xs font-semibold">Arraste a barra para escolher a foto de capa</span>
+                                <span className="text-xs font-semibold">
+                                  Arraste a barra ou envie uma imagem
+                                </span>
                               </div>
                             )}
                             <canvas ref={captureCanvasRef} className="hidden" />
                           </div>
                         </div>
 
-                        {/* Opção alternativa: Enviar foto da galeria */}
-                        <div className="pt-2 border-t border-zinc-800/80">
-                          <button 
+                        {/* Enviar foto da galeria / URL direta da capa */}
+                        <div className="pt-2 border-t border-zinc-800/80 space-y-2">
+                          <button
                             type="button"
                             onClick={() => thumbInputRef.current?.click()}
-                            className="w-full h-11 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-bold rounded-xl border border-zinc-700/80 flex items-center justify-center gap-2 active:scale-95 transition-all"
+                            className="w-full h-11 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-bold rounded-xl border border-zinc-700/80 flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
                           >
-                            <UploadCloud className="w-4 h-4 text-purple-400" /> Ou Enviar Imagem do Celular / PC
+                            <UploadCloud className="w-4 h-4 text-purple-400" />
+                            <span>Ou Enviar Imagem do Celular / PC</span>
                           </button>
-                          <input 
-                            type="file" 
-                            ref={thumbInputRef} 
-                            onChange={handleThumbChange} 
-                            accept="image/*" 
-                            className="hidden" 
+                          <input
+                            type="file"
+                            ref={thumbInputRef}
+                            onChange={handleThumbChange}
+                            accept="image/*"
+                            className="hidden"
                           />
+
+                          <div>
+                            <input
+                              type="text"
+                              value={directThumbUrl}
+                              onChange={(e) => {
+                                setDirectThumbUrl(e.target.value);
+                                setThumbnailPreviewUrl(e.target.value);
+                                setThumbnailFile(null);
+                              }}
+                              placeholder="Ou cole a URL direta da imagem..."
+                              className="w-full bg-[#161520] border border-zinc-700/80 text-white text-[11px] rounded-lg px-3 py-2 font-mono outline-none focus:border-purple-500"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -837,40 +1139,49 @@ export default function AdminVideosPage() {
 
                 {/* Barra de Progresso */}
                 {isUploading && (
-                  <div className="space-y-2 bg-zinc-900 p-4 rounded-xl border border-zinc-700">
+                  <div className="space-y-2 bg-zinc-900 p-4 rounded-xl border border-zinc-700 animate-fade-in">
                     <div className="flex justify-between text-xs font-bold">
                       <span className="text-white flex items-center gap-1.5">
-                        <RefreshCw className="w-4 h-4 animate-spin text-purple-400" /> A publicar pacote...
+                        <RefreshCw className="w-4 h-4 animate-spin text-purple-400" />
+                        <span>{uploadStatusText || "Processando dados..."}</span>
                       </span>
                       <span className="text-purple-400">{uploadProgress}%</span>
                     </div>
                     <div className="w-full bg-zinc-800 h-2.5 rounded-full overflow-hidden">
-                      <div className="bg-gradient-to-r from-purple-600 to-[#00a2ff] h-full rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                      <div
+                        className="bg-gradient-to-r from-purple-600 to-[#00a2ff] h-full rounded-full transition-all duration-300"
+                        style={{ width: `${uploadProgress}%` }}
+                      />
                     </div>
                   </div>
                 )}
               </form>
             </div>
 
-            {/* Rodapé do Modal - Sempre visível e fixo na parte inferior com botões confortáveis */}
+            {/* Rodapé do Modal com Botões */}
             <div className="p-4 sm:p-5 border-t border-zinc-800 bg-[#14141c] flex-shrink-0 grid grid-cols-2 sm:flex sm:justify-end gap-3">
-              <button 
+              <button
                 type="button"
-                onClick={() => { setIsModalOpen(false); resetForm(); }}
-                className="h-12 px-4 rounded-xl font-bold text-zinc-300 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-sm flex items-center justify-center active:scale-95 transition-all"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  resetForm();
+                }}
+                className="h-12 px-4 rounded-xl font-bold text-zinc-300 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-sm flex items-center justify-center active:scale-95 transition-all cursor-pointer"
               >
                 Cancelar
               </button>
-              <button 
+              <button
                 type="submit"
-                form="publish-package-form"
+                form="package-form"
                 disabled={isUploading}
-                className="h-12 px-6 rounded-xl font-black text-white bg-[#00a2ff] hover:bg-[#0091ea] text-sm flex items-center justify-center transition-all shadow-[0_4px_16px_rgba(0,162,255,0.3)] disabled:opacity-50 active:scale-95"
+                className="h-12 px-6 rounded-xl font-black text-white bg-[#00a2ff] hover:bg-[#0091ea] text-sm flex items-center justify-center transition-all shadow-[0_4px_16px_rgba(0,162,255,0.3)] disabled:opacity-50 active:scale-95 cursor-pointer"
               >
                 {isUploading ? (
                   <span className="flex items-center gap-2">
-                    <RefreshCw className="w-4 h-4 animate-spin" /> Publicando...
+                    <RefreshCw className="w-4 h-4 animate-spin" /> Salvando...
                   </span>
+                ) : editingPackageId ? (
+                  "Salvar Alterações do Pacote"
                 ) : (
                   "Publicar Pacote na Loja"
                 )}
@@ -879,7 +1190,6 @@ export default function AdminVideosPage() {
           </div>
         </div>
       )}
-
     </div>
   );
 }
