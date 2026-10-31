@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { AuthContext } from "@/providers/AuthProvider";
 import { updateProfile } from "@/services/supabase/profile";
@@ -10,7 +10,7 @@ import type { Order } from "@/types/index";
 import {
   User, Crown, CreditCard, Shield, LogOut, Check,
   AlertCircle, Loader2, Lock, Zap, Star,
-  Eye, EyeOff, Save, Edit3, Calendar,
+  Eye, EyeOff, Save, Edit3, Calendar, Camera,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -231,8 +231,47 @@ function InputField({
 function ContaTab({ profile, user, refreshProfile }: any) {
   const [username, setUsername] = useState(profile.username || "");
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState(profile.avatar_url || "");
   const [success,  setSuccess]  = useState(false);
   const [error,    setError]    = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingAvatar(true);
+    setError("");
+
+    try {
+      const previewUrl = URL.createObjectURL(file);
+      setAvatarPreview(previewUrl);
+
+      const formData = new FormData();
+      formData.append("avatarFile", file);
+      formData.append("userId", user.id);
+
+      const res = await fetch("/api/profile/avatar", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.success && data.avatar_url) {
+        setAvatarPreview(data.avatar_url);
+        await refreshProfile();
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 3000);
+      } else {
+        throw new Error(data.error || "Falha no envio da foto");
+      }
+    } catch (err: any) {
+      setError(err.message || "Erro ao atualizar foto.");
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -245,6 +284,44 @@ function ContaTab({ profile, user, refreshProfile }: any) {
 
   return (
     <form onSubmit={handleSave}>
+      <Row>
+        <Label>Foto de Perfil</Label>
+        <div className="flex items-center gap-4 mt-2">
+          <div className="relative w-16 h-16 rounded-2xl bg-zinc-800 border border-zinc-700/60 overflow-hidden flex items-center justify-center flex-shrink-0">
+            {avatarPreview ? (
+              <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              <User className="w-8 h-8 text-zinc-500" />
+            )}
+            {isUploadingAvatar && (
+              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                <Loader2 className="w-5 h-5 text-white animate-spin" />
+              </div>
+            )}
+          </div>
+
+          <div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleAvatarChange}
+            />
+            <button
+              type="button"
+              disabled={isUploadingAvatar}
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer disabled:opacity-50"
+            >
+              <Camera className="w-3.5 h-3.5" />
+              <span>{isUploadingAvatar ? "A carregar..." : "Alterar Foto"}</span>
+            </button>
+            <p className="text-[11px] text-zinc-500 mt-1">Formatos JPG, PNG ou WebP</p>
+          </div>
+        </div>
+      </Row>
+
       <Row>
         <Label>Nome de utilizador</Label>
         <InputField

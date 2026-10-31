@@ -4,7 +4,6 @@ import { AuthProvider } from "@/providers/AuthProvider";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { Footer } from "@/components/layout/Footer";
 import { TopNavbar } from "@/components/layout/TopNavbar";
-import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
 import { InstallPwaPrompt } from "@/components/ui/InstallPwaPrompt";
 
 export const metadata: Metadata = {
@@ -46,7 +45,6 @@ export default function RootLayout({
               {children}
             </main>
             <Footer />
-            <WhatsAppButton />
             <InstallPwaPrompt />
           </AuthProvider>
         </QueryProvider>
@@ -76,4 +74,3 @@ export default function RootLayout({
     </html>
   );
 }
-

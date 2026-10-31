@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Film } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { PackageCard } from "@/components/ui/PackageCard";
-import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
 import { createClient } from "@/services/supabase/client";
 import { type Pacote } from "@/lib/whatsapp";
 
 interface PacoteItem {
+  id?: string;
   pacote: Pacote;
   imagemUrl?: string;
   videoUrl?: string;
@@ -19,9 +18,10 @@ interface PacoteItem {
   destaque?: boolean;
 }
 
-// ─── PACOTES PRINCIPAIS BASEADOS NO DESIGN DA REFERÊNCIA ─────────────
+// ─── PACOTES BASE (FALLBACK INICIAL SE BANCO ESTIVER VAZIO OU OFFLINE) ─────────────
 const PACOTES_BASE: PacoteItem[] = [
   {
+    id: "base-1",
     pacote: {
       nome: "COLEÇÃO PREMIUM VIP",
       quantidadeVideos: 54,
@@ -39,6 +39,7 @@ const PACOTES_BASE: PacoteItem[] = [
     videoUrl: "https://gvcliwdhgqpbrbvehpsa.supabase.co/storage/v1/object/public/videos/1788193495732-video.mp4",
   },
   {
+    id: "base-2",
     pacote: {
       nome: "NOVOS CONTEÚDOS",
       quantidadeVideos: 29,
@@ -56,6 +57,7 @@ const PACOTES_BASE: PacoteItem[] = [
     videoUrl: "https://gvcliwdhgqpbrbvehpsa.supabase.co/storage/v1/object/public/videos/1788193791366-video.mp4",
   },
   {
+    id: "base-3",
     pacote: {
       nome: "COLEÇÃO EXCLUSIVA",
       quantidadeVideos: 43,
@@ -73,6 +75,7 @@ const PACOTES_BASE: PacoteItem[] = [
     videoUrl: "https://gvcliwdhgqpbrbvehpsa.supabase.co/storage/v1/object/public/videos/1788194025070-video.mp4",
   },
   {
+    id: "base-4",
     pacote: {
       nome: "PREMIUM CP",
       quantidadeVideos: 17,
@@ -86,9 +89,10 @@ const PACOTES_BASE: PacoteItem[] = [
     badgeCor: "amarelo",
     vendasHoje: 17,
     vagasRestantes: 97,
-    destaque: true, // Card roxo especial com borda neon idêntico à referência!
+    destaque: true,
   },
   {
+    id: "base-5",
     pacote: {
       nome: "MEGA COLEÇÃO ALL CP",
       quantidadeVideos: 120,
@@ -106,6 +110,7 @@ const PACOTES_BASE: PacoteItem[] = [
     videoUrl: "https://gvcliwdhgqpbrbvehpsa.supabase.co/storage/v1/object/public/videos/1788194264495-video.mp4",
   },
   {
+    id: "base-6",
     pacote: {
       nome: "PACOTE TEENS VIP",
       quantidadeVideos: 38,
@@ -123,6 +128,7 @@ const PACOTES_BASE: PacoteItem[] = [
     videoUrl: "https://gvcliwdhgqpbrbvehpsa.supabase.co/storage/v1/object/public/videos/1788195968462-video.mp4",
   },
   {
+    id: "base-7",
     pacote: {
       nome: "PACK SELEÇÃO BELLE",
       quantidadeVideos: 22,
@@ -139,6 +145,7 @@ const PACOTES_BASE: PacoteItem[] = [
     videoUrl: "https://gvcliwdhgqpbrbvehpsa.supabase.co/storage/v1/object/public/videos/1788196177986-video.mp4",
   },
   {
+    id: "base-8",
     pacote: {
       nome: "BLACKMAIL PACK",
       quantidadeVideos: 31,
@@ -161,8 +168,10 @@ export default function VideosPage() {
   const [pacotes, setPacotes] = useState<PacoteItem[]>(PACOTES_BASE);
   const [activeCategory, setActiveCategory] = useState<string>("Todos");
 
-  // Carregar pacotes publicados do Supabase dinamicamente
+  // Carregar pacotes publicados do Supabase dinamicamente sem duplicações
   useEffect(() => {
+    let isMounted = true;
+
     const fetchDbPackages = async () => {
       try {
         const supabase = createClient();
@@ -172,8 +181,11 @@ export default function VideosPage() {
           .eq("status", "published")
           .order("created_at", { ascending: false });
 
+        if (!isMounted) return;
+
         if (data && data.length > 0) {
-          const dbItems: PacoteItem[] = data.map((v: any) => {
+          // 1. Mapear itens do banco
+          const rawDbItems: PacoteItem[] = data.map((v: any) => {
             let parsed = { text: v.description || "", size: "15 GB", quality: "FULL HD", badge: "HOT" };
             try {
               if (v.description && v.description.startsWith("{")) {
@@ -189,8 +201,9 @@ export default function VideosPage() {
               parsed.badge === "PREMIUM" ? "amarelo" : "vermelho";
 
             return {
+              id: v.id,
               pacote: {
-                nome: v.title,
+                nome: (v.title || "Pacote VIP").trim(),
                 quantidadeVideos: v.duration || 50,
                 tamanho: parsed.size || "15 GB",
                 qualidade: parsed.quality || "FULL HD",
@@ -207,12 +220,35 @@ export default function VideosPage() {
             };
           });
 
-          // Coloca os pacotes do banco de dados na frente
-          setPacotes((prev) => {
-            const nomesExistentes = new Set(dbItems.map((d) => d.pacote.nome.toLowerCase()));
-            const unicos = prev.filter((p) => !nomesExistentes.has(p.pacote.nome.toLowerCase()));
-            return [...dbItems, ...unicos];
+          // 2. Desduplicação estrita dentro dos itens do banco (por ID, thumbnail e vídeo)
+          const seenIds = new Set<string>();
+          const seenThumbs = new Set<string>();
+          const seenVideos = new Set<string>();
+          const dbUnicos: PacoteItem[] = [];
+
+          for (const item of rawDbItems) {
+            if (item.id && seenIds.has(item.id)) continue;
+            if (item.imagemUrl && seenThumbs.has(item.imagemUrl)) continue;
+            if (item.videoUrl && seenVideos.has(item.videoUrl)) continue;
+
+            if (item.id) seenIds.add(item.id);
+            if (item.imagemUrl) seenThumbs.add(item.imagemUrl);
+            if (item.videoUrl) seenVideos.add(item.videoUrl);
+
+            dbUnicos.push(item);
+          }
+
+          // 3. Adicionar da lista base APENAS se o vídeo e thumbnail ainda não estiverem na vitrine
+          const baseUnicos = PACOTES_BASE.filter((baseItem) => {
+            const thumbJaExiste = baseItem.imagemUrl && seenThumbs.has(baseItem.imagemUrl);
+            const videoJaExiste = baseItem.videoUrl && seenVideos.has(baseItem.videoUrl);
+            const nomeJaExiste = dbUnicos.some(
+              (d) => d.pacote.nome.toLowerCase() === baseItem.pacote.nome.toLowerCase()
+            );
+            return !thumbJaExiste && !videoJaExiste && !nomeJaExiste;
           });
+
+          setPacotes([...dbUnicos, ...baseUnicos]);
         }
       } catch {
         // Fallback silencioso para pacotes base
@@ -220,23 +256,60 @@ export default function VideosPage() {
     };
 
     fetchDbPackages();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  // Filtragem limpa e reativa por categoria
+  const pacotesFiltrados = useMemo(() => {
+    if (activeCategory === "Todos") return pacotes;
+
+    if (activeCategory === "🔥 Populares") {
+      return pacotes.filter(
+        (p) =>
+          p.badge === "POPULAR" ||
+          p.badge === "MAIS VENDIDO" ||
+          p.badge === "HOT" ||
+          p.vendasHoje && p.vendasHoje > 30
+      );
+    }
+
+    if (activeCategory === "⭐ Exclusivos") {
+      return pacotes.filter(
+        (p) => p.badge === "EXCLUSIVO" || p.badgeCor === "roxo" || p.destaque
+      );
+    }
+
+    if (activeCategory === "💎 Premium") {
+      return pacotes.filter(
+        (p) =>
+          p.badge === "PREMIUM" ||
+          p.badgeCor === "amarelo" ||
+          p.pacote.qualidade === "4K" ||
+          p.pacote.preco >= 50
+      );
+    }
+
+    return pacotes;
+  }, [pacotes, activeCategory]);
 
   return (
     <div className="w-full min-h-screen bg-[#08080c] flex flex-col pb-24 select-none">
-      {/* ─── 1. HERO BANNER (IDENTICO À REFERÊNCIA) ─── */}
+      {/* ─── 1. HERO BANNER ─── */}
       <HeroBanner />
 
       {/* ─── 2. ÁREA DE PACOTES (CONTAINER ESPAÇOSO 1520px) ─── */}
       <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
-        {/* Linha de cabeçalho: Filtros sutis à esquerda com scroll no mobile, contador de títulos à direita */}
+        {/* Linha de cabeçalho: Filtros com scroll suave no mobile, contador de títulos à direita */}
         <div className="flex items-center justify-between gap-3 border-b border-zinc-800/60 pb-3">
           <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none -mx-2 px-2">
             {["Todos", "🔥 Populares", "⭐ Exclusivos", "💎 Premium"].map((cat) => (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex-shrink-0 ${
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex-shrink-0 cursor-pointer ${
                   activeCategory === cat
                     ? "bg-purple-600/30 border border-purple-500 text-purple-200"
                     : "text-zinc-400 hover:text-white"
@@ -247,17 +320,17 @@ export default function VideosPage() {
             ))}
           </div>
 
-          {/* Contador estilo "32 titles" da referência */}
+          {/* Contador de títulos únicos */}
           <span className="text-zinc-500 text-xs font-semibold whitespace-nowrap flex-shrink-0">
-            {pacotes.length} titles
+            {pacotesFiltrados.length} títulos
           </span>
         </div>
 
-        {/* ─── GRELHA ESPAÇOSA DE CARDS (3 A 4 COLUNAS COM ESPAÇAMENTO RESPIRÁVEL) ─── */}
+        {/* ─── GRELHA ESPAÇOSA DE CARDS (SEM DUPLICAÇÕES) ─── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
-          {pacotes.map((item, idx) => (
+          {pacotesFiltrados.map((item, idx) => (
             <PackageCard
-              key={idx}
+              key={item.id || `${item.pacote.nome}-${item.videoUrl || item.imagemUrl || idx}`}
               pacote={item.pacote}
               imagemUrl={item.imagemUrl}
               videoUrl={item.videoUrl}
@@ -270,9 +343,6 @@ export default function VideosPage() {
           ))}
         </div>
       </div>
-
-      {/* ─── 3. BOTÃO FLUTUANTE (IDÊNTICO AO "DM ME FOR MORE") ─── */}
-      <WhatsAppButton />
     </div>
   );
 }

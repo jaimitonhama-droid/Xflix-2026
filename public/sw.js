@@ -2,7 +2,7 @@
 // XFLIX — Service Worker PWA (Offline & Fast Cache)
 // ============================================================
 
-const CACHE_NAME = 'xflix-pwa-v3';
+const CACHE_NAME = 'xflix-pwa-v4';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -32,7 +32,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Estratégia de requisições: Network First com fallback para cache
+// Estratégia de requisições: Network First para navegação sem substituição indevida
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
@@ -41,7 +41,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Se for navegação de página HTML: Network First com fallback
+  // Se for navegação de página HTML: Network First direto
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
@@ -55,7 +55,10 @@ self.addEventListener('fetch', (event) => {
         .catch(async () => {
           const cached = await caches.match(event.request);
           if (cached) return cached;
-          return caches.match('/');
+          return new Response('Página indisponível offline', {
+            status: 503,
+            headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+          });
         })
     );
     return;

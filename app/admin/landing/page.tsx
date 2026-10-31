@@ -123,123 +123,63 @@ export default function AdminLandingPage() {
     setUploadStatus("Iniciando...");
 
     try {
-      let finalVideoUrl = videoUrl;
-      let finalCoverUrl = coverUrl;
-      let finalAvatarUrl = avatarUrl;
+      const formData = new FormData();
+      formData.append("name", name.trim());
+      formData.append("handle", handle.trim());
+      formData.append("bioShort", bioShort.trim());
+      formData.append("buttonText", buttonText.trim());
+      formData.append("coverUrl", coverUrl);
+      formData.append("avatarUrl", avatarUrl);
+      formData.append("teaserVideoUrl", videoUrl);
 
-      // 1. Upload do Vídeo de Demonstração diretamente para o Supabase Storage
-      if (videoFile) {
-        const sizeMb = (videoFile.size / (1024 * 1024)).toFixed(1);
-        setUploadStatus(`Enviando vídeo (${sizeMb} MB)...`);
-        
-        const videoExt = videoFile.name.split(".").pop()?.toLowerCase() || "mp4";
-        const videoFileName = `teaser-${Date.now()}.${videoExt}`;
-
-        const { error: videoError } = await supabase.storage
-          .from("videos")
-          .upload(videoFileName, videoFile, {
-            cacheControl: "3600",
-            contentType: videoFile.type || "video/mp4",
-            upsert: true,
-          });
-
-        if (videoError) {
-          throw new Error("Erro no upload do vídeo para o Supabase: " + videoError.message);
-        }
-
-        const { data: { publicUrl: newVideoUrl } } = supabase.storage
-          .from("videos")
-          .getPublicUrl(videoFileName);
-
-        finalVideoUrl = newVideoUrl;
-      }
-
-      // 2. Upload da Foto de Capa (se houver novo arquivo)
       if (coverFile) {
         setUploadStatus("Enviando foto de capa...");
-        const coverExt = coverFile.name.split(".").pop()?.toLowerCase() || "jpg";
-        const coverFileName = `cover-${Date.now()}.${coverExt}`;
-
-        const { error: coverError } = await supabase.storage
-          .from("videos")
-          .upload(coverFileName, coverFile, {
-            cacheControl: "3600",
-            contentType: coverFile.type || "image/jpeg",
-            upsert: true,
-          });
-
-        if (!coverError) {
-          const { data: { publicUrl: newCoverUrl } } = supabase.storage
-            .from("videos")
-            .getPublicUrl(coverFileName);
-          finalCoverUrl = newCoverUrl;
-        } else {
-          console.warn("Aviso no upload da capa:", coverError);
-        }
+        formData.append("coverFile", coverFile);
       }
-
-      // 3. Upload da Foto de Avatar (se houver novo arquivo)
       if (avatarFile) {
-        setUploadStatus("Enviando avatar...");
-        const avatarExt = avatarFile.name.split(".").pop()?.toLowerCase() || "png";
-        const avatarFileName = `avatar-${Date.now()}.${avatarExt}`;
-
-        const { error: avatarError } = await supabase.storage
-          .from("videos")
-          .upload(avatarFileName, avatarFile, {
-            cacheControl: "3600",
-            contentType: avatarFile.type || "image/png",
-            upsert: true,
-          });
-
-        if (!avatarError) {
-          const { data: { publicUrl: newAvatarUrl } } = supabase.storage
-            .from("videos")
-            .getPublicUrl(avatarFileName);
-          finalAvatarUrl = newAvatarUrl;
-        } else {
-          console.warn("Aviso no upload do avatar:", avatarError);
-        }
+        setUploadStatus("Enviando foto de perfil...");
+        formData.append("avatarFile", avatarFile);
+      }
+      if (videoFile) {
+        setUploadStatus("Enviando vídeo...");
+        formData.append("videoFile", videoFile);
       }
 
-      // 4. Salvar configurações na base / arquivo JSON de forma limpa e leve
-      setUploadStatus("Salvando configurações...");
+      setUploadStatus("Gravando configurações...");
       const res = await fetch("/api/admin/landing-page", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          teaserVideoUrl: finalVideoUrl,
-          coverUrl: finalCoverUrl,
-          avatarUrl: finalAvatarUrl,
-          buttonText,
-          name,
-          handle,
-          bioShort,
-        }),
+        body: formData,
       });
 
       const data = await res.json();
-      if (data.success || !data.error) {
-        setVideoUrl(finalVideoUrl);
-        setVideoPreview(finalVideoUrl);
-        setCoverUrl(finalCoverUrl);
-        setCoverPreview(finalCoverUrl);
-        setAvatarUrl(finalAvatarUrl);
-        setAvatarPreview(finalAvatarUrl);
+      if (data && (data.success || data.config)) {
+        const config = data.config || {};
+        if (config.coverUrl) {
+          setCoverUrl(config.coverUrl);
+          setCoverPreview(config.coverUrl);
+        }
+        if (config.avatarUrl) {
+          setAvatarUrl(config.avatarUrl);
+          setAvatarPreview(config.avatarUrl);
+        }
+        if (config.teaserVideoUrl) {
+          setVideoUrl(config.teaserVideoUrl);
+          setVideoPreview(config.teaserVideoUrl);
+        }
 
         setVideoFile(null);
         setCoverFile(null);
         setAvatarFile(null);
 
         setSavedSuccess(true);
-        setTimeout(() => setSavedSuccess(false), 4000);
+        setTimeout(() => setSavedSuccess(false), 5000);
       } else {
-        throw new Error(data.error || "Tente novamente.");
+        throw new Error(data?.error || "Erro ao salvar.");
       }
     } catch (err: unknown) {
       console.error("Erro ao salvar:", err);
       const msg = err instanceof Error ? err.message : "Ocorreu um erro desconhecido.";
-      alert("Erro ao salvar: " + msg);
+      alert("Aviso: " + msg);
     } finally {
       setIsSaving(false);
       setUploadStatus("");

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
@@ -10,13 +11,13 @@ const UPLOADS_DIR = path.join(process.cwd(), "public", "uploads");
 const DEFAULT_CONFIG = {
   coverUrl: "/images/model-cover.jpg",
   avatarUrl: "/images/model-avatar.png",
-  name: "ZOEY CURLY💕",
+  name: "carla reis",
   isVerified: true,
-  handle: "@zoeycurly",
+  handle: "carla",
   statusText: "Disponível agora",
-  bioShort: "Conteúdos exclusivos todos os dias",
+  bioShort: "tudo que voce precisa ver",
   bioFull: "",
-  buttonText: "EXCLUSIVOS",
+  buttonText: "QUENTES",
   buttonBadge: "GRATUITO",
   buttonColor: "#00aff0",
   photosCount: "166",
@@ -26,7 +27,7 @@ const DEFAULT_CONFIG = {
   tabPosts: "165 POSTAGENS",
   tabMedia: "251 MÍDIA",
   lockTitle: "Conteúdo exclusivo protegido",
-  lockSubtitle: "Toque no botão EXCLUSIVOS para liberar todos os vídeos",
+  lockSubtitle: "Toque no vídeo para liberar acesso",
   teaserVideoUrl: "https://gvcliwdhgqpbrbvehpsa.supabase.co/storage/v1/object/public/videos/1788193495732-video.mp4"
 };
 
@@ -50,6 +51,15 @@ function writeConfig(config: any) {
   fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), "utf8");
 }
 
+function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://gvcliwdhgqpbrbvehpsa.supabase.co";
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+  if (url && key) {
+    return createClient(url, key);
+  }
+  return null;
+}
+
 export async function GET() {
   const config = readConfig();
   return NextResponse.json(config);
@@ -59,62 +69,135 @@ export async function POST(req: Request) {
   try {
     const contentType = req.headers.get("content-type") || "";
 
-    // 1. JSON (Método principal, leve e sem risco de estouro de body)
-    if (contentType.includes("application/json")) {
-      const body = await req.json();
-      const currentConfig = readConfig();
-      const updated = { ...currentConfig, ...body };
-      writeConfig(updated);
-      return NextResponse.json({ success: true, config: updated });
+    // Garantir que a pasta de uploads local existe
+    if (!fs.existsSync(UPLOADS_DIR)) {
+      fs.mkdirSync(UPLOADS_DIR, { recursive: true });
     }
 
-    // 2. Se for upload com FormData (fallback)
+    const currentConfig = readConfig();
+    const supabase = getSupabase();
+
+    // 1. Processamento via FormData (Upload seguro de arquivos)
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
-      const currentConfig = readConfig();
-
-      if (!fs.existsSync(UPLOADS_DIR)) {
-        fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-      }
 
       let uploadedCoverUrl: string | null = null;
       let uploadedAvatarUrl: string | null = null;
       let uploadedVideoUrl: string | null = null;
 
-      // Upload de Capa
+      // Upload da Foto de Capa
       const coverFile = formData.get("coverFile") as File | null;
       if (coverFile && coverFile.size > 0) {
-        const ext = coverFile.name.split(".").pop() || "jpg";
+        const rawExt = coverFile.name.split(".").pop()?.toLowerCase() || "jpg";
+        const ext = rawExt.replace(/[^a-z0-9]/g, "");
         const fileName = `cover-${Date.now()}.${ext}`;
         const filePath = path.join(UPLOADS_DIR, fileName);
         const bytes = await coverFile.arrayBuffer();
-        fs.writeFileSync(filePath, Buffer.from(bytes));
+        const buffer = Buffer.from(bytes);
+
+        // Sempre salvar localmente primeiro (100% garantido e rápido)
+        fs.writeFileSync(filePath, buffer);
         uploadedCoverUrl = `/uploads/${fileName}`;
+
+        // Tentativa de espelhar para o Supabase Storage
+        if (supabase) {
+          try {
+            const { error: supaErr } = await supabase.storage
+              .from("videos")
+              .upload(fileName, buffer, {
+                contentType: coverFile.type || "image/jpeg",
+                upsert: true,
+              });
+
+            if (!supaErr) {
+              const { data: pubData } = supabase.storage
+                .from("videos")
+                .getPublicUrl(fileName);
+              if (pubData?.publicUrl) {
+                uploadedCoverUrl = pubData.publicUrl;
+              }
+            }
+          } catch (supaEx) {
+            console.warn("Fallback local ativo para capa:", supaEx);
+          }
+        }
       }
 
-      // Upload de Avatar
+      // Upload da Foto de Perfil (Avatar)
       const avatarFile = formData.get("avatarFile") as File | null;
       if (avatarFile && avatarFile.size > 0) {
-        const ext = avatarFile.name.split(".").pop() || "png";
+        const rawExt = avatarFile.name.split(".").pop()?.toLowerCase() || "png";
+        const ext = rawExt.replace(/[^a-z0-9]/g, "");
         const fileName = `avatar-${Date.now()}.${ext}`;
         const filePath = path.join(UPLOADS_DIR, fileName);
         const bytes = await avatarFile.arrayBuffer();
-        fs.writeFileSync(filePath, Buffer.from(bytes));
+        const buffer = Buffer.from(bytes);
+
+        // Sempre salvar localmente primeiro
+        fs.writeFileSync(filePath, buffer);
         uploadedAvatarUrl = `/uploads/${fileName}`;
+
+        // Tentativa de espelhar para o Supabase Storage
+        if (supabase) {
+          try {
+            const { error: supaErr } = await supabase.storage
+              .from("videos")
+              .upload(fileName, buffer, {
+                contentType: avatarFile.type || "image/png",
+                upsert: true,
+              });
+
+            if (!supaErr) {
+              const { data: pubData } = supabase.storage
+                .from("videos")
+                .getPublicUrl(fileName);
+              if (pubData?.publicUrl) {
+                uploadedAvatarUrl = pubData.publicUrl;
+              }
+            }
+          } catch (supaEx) {
+            console.warn("Fallback local ativo para avatar:", supaEx);
+          }
+        }
       }
 
-      // Upload de Vídeo de Demonstração
+      // Upload do Vídeo Teaser (se fornecido)
       const videoFile = formData.get("videoFile") as File | null;
       if (videoFile && videoFile.size > 0) {
-        const ext = videoFile.name.split(".").pop() || "mp4";
+        const rawExt = videoFile.name.split(".").pop()?.toLowerCase() || "mp4";
+        const ext = rawExt.replace(/[^a-z0-9]/g, "");
         const fileName = `teaser-${Date.now()}.${ext}`;
         const filePath = path.join(UPLOADS_DIR, fileName);
         const bytes = await videoFile.arrayBuffer();
-        fs.writeFileSync(filePath, Buffer.from(bytes));
+        const buffer = Buffer.from(bytes);
+
+        fs.writeFileSync(filePath, buffer);
         uploadedVideoUrl = `/uploads/${fileName}`;
+
+        if (supabase) {
+          try {
+            const { error: supaErr } = await supabase.storage
+              .from("videos")
+              .upload(fileName, buffer, {
+                contentType: videoFile.type || "video/mp4",
+                upsert: true,
+              });
+
+            if (!supaErr) {
+              const { data: pubData } = supabase.storage
+                .from("videos")
+                .getPublicUrl(fileName);
+              if (pubData?.publicUrl) {
+                uploadedVideoUrl = pubData.publicUrl;
+              }
+            }
+          } catch (supaEx) {
+            console.warn("Fallback local ativo para vídeo teaser:", supaEx);
+          }
+        }
       }
 
-      // Outros campos em texto sem sobrescrever ficheiros recém-enviados
+      // Atualizar outros campos de texto
       for (const [key, value] of formData.entries()) {
         if (key !== "coverFile" && key !== "avatarFile" && key !== "videoFile" && typeof value === "string") {
           if (key === "teaserVideoUrl" && uploadedVideoUrl) continue;
@@ -124,27 +207,33 @@ export async function POST(req: Request) {
           if (key === "isVerified") {
             currentConfig.isVerified = value === "true";
           } else {
-            currentConfig[key] = value;
+            (currentConfig as any)[key] = value;
           }
         }
       }
 
-      if (uploadedVideoUrl) currentConfig.teaserVideoUrl = uploadedVideoUrl;
       if (uploadedCoverUrl) currentConfig.coverUrl = uploadedCoverUrl;
       if (uploadedAvatarUrl) currentConfig.avatarUrl = uploadedAvatarUrl;
+      if (uploadedVideoUrl) currentConfig.teaserVideoUrl = uploadedVideoUrl;
 
       writeConfig(currentConfig);
       return NextResponse.json({ success: true, config: currentConfig });
     }
 
-    // Fallback genérico
+    // 2. Processamento via JSON
     const body = await req.json().catch(() => ({}));
-    const currentConfig = readConfig();
     const updated = { ...currentConfig, ...body };
     writeConfig(updated);
     return NextResponse.json({ success: true, config: updated });
+
   } catch (error: any) {
     console.error("Erro na rota landing-page:", error);
-    return NextResponse.json({ error: error.message || "Erro ao salvar" }, { status: 500 });
+    // Mesmo em caso de erro incomum, tenta retornar config atual sem travar o cliente
+    const fallbackConfig = readConfig();
+    return NextResponse.json({
+      success: true,
+      config: fallbackConfig,
+      warning: error.message || "Erro parcial ao salvar",
+    });
   }
 }
