@@ -9,15 +9,15 @@ const CONFIG_PATH = path.join(process.cwd(), "data", "landing_page_config.json")
 const UPLOADS_DIR = path.join(process.cwd(), "public", "uploads");
 
 const DEFAULT_CONFIG = {
-  coverUrl: "/images/model-cover.jpg",
-  avatarUrl: "/images/model-avatar.png",
-  name: "carla reis",
+  coverUrl: "/uploads/cover-1793477569791.jpeg",
+  avatarUrl: "/uploads/avatar-1793477573183.jpeg",
+  name: "Helena",
   isVerified: true,
-  handle: "carla",
+  handle: "VIP",
   statusText: "Disponível agora",
-  bioShort: "tudo que voce precisa ver",
+  bioShort: "",
   bioFull: "",
-  buttonText: "QUENTES",
+  buttonText: "+ videos",
   buttonBadge: "GRATUITO",
   buttonColor: "#00aff0",
   photosCount: "166",
@@ -27,8 +27,8 @@ const DEFAULT_CONFIG = {
   tabPosts: "165 POSTAGENS",
   tabMedia: "251 MÍDIA",
   lockTitle: "Conteúdo exclusivo protegido",
-  lockSubtitle: "Toque no vídeo para liberar acesso",
-  teaserVideoUrl: "https://gvcliwdhgqpbrbvehpsa.supabase.co/storage/v1/object/public/videos/1788193495732-video.mp4"
+  lockSubtitle: "Toque no botão EXCLUSIVOS para liberar todos os vídeos",
+  teaserVideoUrl: "/uploads/teaser-1793477576090.mp4"
 };
 
 function readConfig() {

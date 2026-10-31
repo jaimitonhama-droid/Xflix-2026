@@ -17,28 +17,28 @@ import {
 } from "lucide-react";
 import { createClient } from "@/services/supabase/client";
 
-const DEFAULT_VIDEO = "https://gvcliwdhgqpbrbvehpsa.supabase.co/storage/v1/object/public/videos/1788193495732-video.mp4";
+const DEFAULT_VIDEO = "/uploads/teaser-1793477576090.mp4";
 
 export default function AdminLandingPage() {
   const supabase = createClient();
 
   // Vídeo e Botão
   const [videoUrl, setVideoUrl] = useState(DEFAULT_VIDEO);
-  const [buttonText, setButtonText] = useState("QUENTES");
+  const [buttonText, setButtonText] = useState("+ videos");
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string>("");
   const videoInputRef = useRef<HTMLInputElement>(null);
 
   // Perfil da Modelo
-  const [name, setName] = useState("carla reis");
-  const [handle, setHandle] = useState("carla");
-  const [bioShort, setBioShort] = useState("tudo que voce precisa ver");
-  const [coverUrl, setCoverUrl] = useState("/images/model-cover.jpg");
+  const [name, setName] = useState("Helena");
+  const [handle, setHandle] = useState("VIP");
+  const [bioShort, setBioShort] = useState("");
+  const [coverUrl, setCoverUrl] = useState("/uploads/cover-1793477569791.jpeg");
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string>("");
   const coverInputRef = useRef<HTMLInputElement>(null);
 
-  const [avatarUrl, setAvatarUrl] = useState("/images/model-avatar.png");
+  const [avatarUrl, setAvatarUrl] = useState("/uploads/avatar-1793477573183.jpeg");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>("");
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -112,7 +112,7 @@ export default function AdminLandingPage() {
     if (confirm("Deseja restaurar as configurações padrão da página de entrada?")) {
       setVideoUrl(DEFAULT_VIDEO);
       setVideoPreview(DEFAULT_VIDEO);
-      setButtonText("QUENTES");
+      setButtonText("+ videos");
       setVideoFile(null);
     }
   };
